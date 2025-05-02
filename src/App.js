@@ -1,25 +1,64 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import {BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import ReservationForm from './components/ReservationForm';
+import AdminCourts     from './components/AdminCourts';
+import AdminTimeSlots  from './components/AdminTimeSlots';
+import LoginPage from './components/LoginPage';
+import ReservationList from './components/ReservationList';
+
+
+
+function PrivateRoute({ children }) {
+  const token = localStorage.getItem('access');
+  console.log("Token en PrivateRoute:", token);  // Verifica que el token se recupere correctamente
+  return token ? children : <Navigate to="/login" />;
+}
+
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <ReservationForm />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/list"
+          element={
+            <PrivateRoute>
+              <ReservationList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin/courts"
+          element={
+            <PrivateRoute>
+              <AdminCourts />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/slots"
+          element={
+            <PrivateRoute>
+              <AdminTimeSlots />
+            </PrivateRoute>
+          }
+        />
+      </Routes>
+
+    </Router>
   );
 }
+
 
 export default App;
