@@ -11,8 +11,9 @@ import ReservationList from './components/ReservationList';
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('access');
   console.log("Token en PrivateRoute:", token);  // Verifica que el token se recupere correctamente
-  return token ? children : <Navigate to="/login" />;
-}
+  if (!token) {
+    return <Navigate to="/login" replace />;}
+  return token ? children : <Navigate to="/login" replace/>;}
 
 
 function App() {

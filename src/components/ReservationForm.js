@@ -5,7 +5,7 @@ import Navbar from './Navbar';
 export default function ReservationForm() {
   const [courts, setCourts] = useState([]);
   const [slots,  setSlots]  = useState([]);
-  const [form,   setForm]   = useState({ court: '', date: '', slot: '' });
+  const [form,   setForm]   = useState({ court: '', date: '', timeslot: '' });
 
   useEffect(() => {
     const token = localStorage.getItem('access');
@@ -25,7 +25,7 @@ export default function ReservationForm() {
     const reservationData = {
       court: parseInt(form.court, 10),  // Asegúrate de que court y slot sean enteros
       date: form.date,
-      slot: parseInt(form.slot, 10),
+      timeslot: parseInt(form.timeslot, 10),
     };
   
     createReservation(reservationData).then(() => window.location.reload());
@@ -49,7 +49,7 @@ export default function ReservationForm() {
       </label>
       <label>
         Franja
-        <select name="slot" value={form.slot} onChange={handleChange} required>
+        <select name="timeslot" value={form.timeslot} onChange={handleChange} required>
           <option value="">-- Selecciona franja --</option>
           {slots.map(s =>
             <option key={s.id} value={s.id}>
