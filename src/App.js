@@ -5,6 +5,7 @@ import AdminCourts     from './components/AdminCourts';
 import AdminTimeSlots  from './components/AdminTimeSlots';
 import LoginPage from './components/LoginPage';
 import ReservationList from './components/ReservationList';
+import RegistroUsuario from './components/RegistroUsuario';
 
 
 
@@ -47,8 +48,16 @@ function App() {
           }
         />
 
-        <Route
-          path="/admin/slots"
+        <Route path="/registro" 
+        element={
+     
+              <RegistroUsuario />
+
+          }
+        />
+
+    
+          <Route path="/admin/slots"
           element={
             <PrivateRoute>
               <AdminTimeSlots />

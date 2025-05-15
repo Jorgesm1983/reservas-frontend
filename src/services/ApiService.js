@@ -37,8 +37,8 @@ export const createCourt = data => API.post('courts/', data);
 export const createTimeSlot = data => API.post('timeslots/', data);
 
 // Autenticación
-export const login = async (username, password) => {
-  const response = await API.post('token/', { username, password });
+export const login = async (nombre, password) => {
+  const response = await API.post('token/', { nombre, password });
   if (response.data.access) {
     localStorage.setItem('access', response.data.access);
     localStorage.setItem('refresh', response.data.refresh);

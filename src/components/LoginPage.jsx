@@ -1,26 +1,32 @@
 import React, { useState } from 'react';
-import { login } from '../services/ApiService';  // Usa la función de login de ApiService.js
+import { login } from '../services/ApiService';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [nombre, setNombre] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    console.log('Intentando login con:', username, password); // 👈
+    console.log('Intentando login con:', nombre, password);
 
     try {
-      const response = await login(username, password); // Usa la función login desde ApiService.js
+      const response = await login(nombre, password);
 
-      console.log('Login correcto:', response.data); 
+      console.log('Login correcto:', response.data);
 
-      localStorage.setItem('username', response.data.username);
-      localStorage.setItem('user_id', response.data.user_id);
+      // Guarda datos adicionales si el backend los devuelve
+      if (response.data.nombre) {
+        localStorage.setItem('nombre', response.data.nombre);
+      }
+      if (response.data.user_id) {
+        localStorage.setItem('user_id', response.data.user_id);
+      }
 
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
 
@@ -29,10 +35,14 @@ const LoginPage = () => {
         refreshToken: localStorage.getItem('refresh'),
       });
 
-      navigate('/'); 
+      navigate('/');
     } catch (err) {
-      setError('Usuario o contraseña incorrectos');
-      console.error('Error en login:', err); 
+      let errorMessage = 'Usuario o contraseña incorrectos';
+      if (err.response && err.response.data) {
+        errorMessage = err.response.data.detail || errorMessage;
+      }
+      setError(errorMessage);
+      console.error('Error en login:', err);
     }
   };
 
@@ -41,13 +51,13 @@ const LoginPage = () => {
       <h2>Iniciar sesión</h2>
       <form onSubmit={handleLogin}>
         <div className="mb-3">
-          <label htmlFor="username" className="form-label">Usuario</label>
+          <label htmlFor="nombre" className="form-label">Usuario</label>
           <input
             type="text"
             className="form-control"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            id="nombre"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
             required
           />
         </div>
@@ -69,6 +79,9 @@ const LoginPage = () => {
 
         <button type="submit" className="btn btn-primary">Entrar</button>
       </form>
+      <Link to="/registro" className="btn btn-outline-secondary mt-3">
+        Crear nueva cuenta
+      </Link>
     </div>
   );
 };
