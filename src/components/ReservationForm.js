@@ -2,6 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { fetchCourts, fetchTimeSlots, createReservation } from '../services/ApiService';
 import Navbar from './Navbar';
 
+// Función para calcular la ventana de reserva
+function getReservaWindow() {
+  const now = new Date();
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000); // Ajuste de zona horaria
+  
+  const horaActual = localDate.getHours();
+  const today = new Date(localDate.getFullYear(), localDate.getMonth(), localDate.getDate());
+
+  // Fecha mínima siempre es HOY (local)
+  const minDate = new Date(today);
+  
+  // Fecha máxima: hoy + 1 día si <8h, hoy +2 días si >=8h
+  const maxDate = new Date(today);
+  maxDate.setDate(today.getDate() + (horaActual >= 8 ? 2 : 1));
+
+  // Formatear en ISO sin conversión UTC
+  const toLocalISO = d => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  return {
+    min: toLocalISO(minDate),
+    max: toLocalISO(maxDate)
+  };
+}
+
 export default function ReservationForm() {
   const [courts, setCourts] = useState([]);
   const [slots, setSlots] = useState([]);
@@ -9,7 +38,17 @@ export default function ReservationForm() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dateLimits, setDateLimits] = useState(getReservaWindow());
 
+  // Actualiza los límites de fecha cada minuto
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDateLimits(getReservaWindow());
+    }, 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Cargar pistas y franjas horarias
   useEffect(() => {
     const token = localStorage.getItem('access');
     if (token) {
@@ -20,7 +59,7 @@ export default function ReservationForm() {
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setError(''); // Limpia errores al modificar el formulario
+    setError('');
     setSuccessMessage('');
   };
 
@@ -39,11 +78,10 @@ export default function ReservationForm() {
 
       await createReservation(reservationData);
       setSuccessMessage('✅ Reserva creada exitosamente!');
-      setForm({ court: '', date: '', timeslot: '' }); // Limpiar formulario
+      setForm({ court: '', date: '', timeslot: '' });
       
     } catch (error) {
       if (error.response) {
-        // Error específico del backend
         if (error.response.status === 409) {
           setError('⛔ ' + error.response.data.detail);
         } else {
@@ -79,14 +117,18 @@ export default function ReservationForm() {
 
         <label>
           Fecha
-          <input 
-            type="date" 
-            name="date" 
-            value={form.date} 
-            onChange={handleChange} 
-            required
-            disabled={isSubmitting}
-          />
+          <input
+              type="date"
+              name="date"
+              value={form.date}
+              onChange={handleChange}
+              min={dateLimits.min}
+              max={dateLimits.max}
+              className="form-control"
+              required
+              // Validación adicional en el cliente
+              onKeyDown={(e) => e.preventDefault()} // Evita entrada manual
+            />
         </label>
 
         <label>
@@ -114,17 +156,8 @@ export default function ReservationForm() {
           {isSubmitting ? 'Procesando...' : 'Reservar'}
         </button>
 
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="success-message">
-            {successMessage}
-          </div>
-        )}
+        {error && <div className="error-message">{error}</div>}
+        {successMessage && <div className="success-message">{successMessage}</div>}
       </form>
     </>
   );

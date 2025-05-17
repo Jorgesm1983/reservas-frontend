@@ -29,16 +29,18 @@ API.interceptors.request.use(config => {
 // Endpoints
 export const fetchCourts = () => API.get('courts/');
 export const fetchTimeSlots = () => API.get('timeslots/');
-export const fetchReservations = () => API.get('reservations/');
+export const fetchReservations = (params) => API.get('reservations/', { params });
 export const createReservation = data => API.post('reservations/', data);
 export const deleteReservation = id => API.delete(`reservations/${id}/`);  // ← Añadido
 export const fetchUsers = () => API.get('users/');
 export const createCourt = data => API.post('courts/', data);
 export const createTimeSlot = data => API.post('timeslots/', data);
+export const fetchViviendas = () => API.get('obtener_viviendas');
+
 
 // Autenticación
-export const login = async (nombre, password) => {
-  const response = await API.post('token/', { nombre, password });
+export const login = async (email, password) => {
+  const response = await API.post('token/', { email, password });
   if (response.data.access) {
     localStorage.setItem('access', response.data.access);
     localStorage.setItem('refresh', response.data.refresh);
@@ -50,3 +52,11 @@ export const logout = () => {
   localStorage.removeItem('access');
   localStorage.removeItem('refresh');
 };
+
+API.interceptors.request.use(config => {
+  const token = localStorage.getItem('access');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});

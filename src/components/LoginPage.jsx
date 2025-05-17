@@ -6,26 +6,30 @@ import { Link } from 'react-router-dom';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    console.log('Intentando login con:', nombre, password);
+    console.log('Intentando login con:', email, password);
 
     try {
-      const response = await login(nombre, password);
+      const response = await login(email, password);
 
       console.log('Login correcto:', response.data);
 
       // Guarda datos adicionales si el backend los devuelve
       if (response.data.nombre) {
-        localStorage.setItem('nombre', response.data.nombre);
+        localStorage.setItem('email', response.data.email);
       }
       if (response.data.user_id) {
         localStorage.setItem('user_id', response.data.user_id);
+      }
+        // ← Aquí guarda is_staff
+      if (response.data.is_staff !== undefined) {
+        localStorage.setItem('is_staff', response.data.is_staff);
       }
 
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
@@ -51,13 +55,13 @@ const LoginPage = () => {
       <h2>Iniciar sesión</h2>
       <form onSubmit={handleLogin}>
         <div className="mb-3">
-          <label htmlFor="nombre" className="form-label">Usuario</label>
+          <label htmlFor="email" className="form-label">Email</label>
           <input
-            type="text"
+            type="email"
             className="form-control"
-            id="nombre"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
