@@ -6,6 +6,7 @@ import AdminTimeSlots  from './components/AdminTimeSlots';
 import LoginPage from './components/LoginPage';
 import ReservationList from './components/ReservationList';
 import RegistroUsuario from './components/RegistroUsuario';
+import MisReservas from './components/MisReservas';
 
 
 
@@ -55,8 +56,12 @@ function App() {
 
           }
         />
-
-    
+      <Route path="/mis-reservas" element={
+            <PrivateRoute>
+              <MisReservas />
+            </PrivateRoute>
+          } />
+          
           <Route path="/admin/slots"
           element={
             <PrivateRoute>

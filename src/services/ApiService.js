@@ -5,7 +5,8 @@ const API = axios.create({
   baseURL: 'http://localhost:8000/api/',  // ← /api/ es crítico
   withCredentials: true,
   headers: {
-    'X-Requested-With': 'XMLHttpRequest'
+    'X-Requested-With': 'XMLHttpRequest',
+    'Content-Type': 'application/json'
   }
 });
 
@@ -19,12 +20,22 @@ API.interceptors.request.use(config => {
 
   // Token JWT
   const accessToken = localStorage.getItem('access');
-  if (accessToken) {
-    config.headers['Authorization'] = `Bearer ${accessToken}`;
-  }
-
+  if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
+  
   return config;
 });
+
+API.interceptors.response.use(
+  response => response,
+  async error => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('access');
+      localStorage.removeItem('refresh');
+      window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Endpoints
 export const fetchCourts = () => API.get('courts/');
@@ -36,6 +47,9 @@ export const fetchUsers = () => API.get('users/');
 export const createCourt = data => API.post('courts/', data);
 export const createTimeSlot = data => API.post('timeslots/', data);
 export const fetchViviendas = () => API.get('obtener_viviendas');
+export const fetchUsuariosComunidad = () => API.get('usuarios-comunidad/');
+export const invitarJugadores = (reservaId, data) => API.post(`/reservations/${reservaId}/invitar/`, data);
+export const eliminarInvitacion = (invitacionId) => API.delete(`/invitaciones/${invitacionId}/`);
 
 
 // Autenticación
@@ -51,6 +65,8 @@ export const login = async (email, password) => {
 export const logout = () => {
   localStorage.removeItem('access');
   localStorage.removeItem('refresh');
+
+  window.location.href = '/login';
 };
 
 API.interceptors.request.use(config => {
