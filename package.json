@@ -10,6 +10,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@types/react-date-range": "^1.4.10",
     "axios": "^1.9.0",
+    "bootstrap": "^5.3.6",
     "date-fns": "^2.30.0",
     "react": "^19.1.0",
     "react-date-range": "^2.0.1",

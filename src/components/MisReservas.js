@@ -4,8 +4,9 @@ import {
   fetchReservations,
   fetchUsuariosComunidad,
   invitarJugadores,
-  eliminarInvitacion, // <- Usar esta función
-  deleteReservation
+  eliminarInvitacion,
+  deleteReservation,
+  fetchInvitadosFrecuentes
 } from '../services/ApiService';
 import { format } from 'date-fns';
 
@@ -15,13 +16,11 @@ const ESTADOS_COLORES = {
   rechazada: 'bg-danger'
 };
 
-// Componente personalizado para grupo colapsable
 const Group = props => {
   const { label, options } = props.data;
   const { expandedGroups, setExpandedGroups } = props.selectProps;
   const isExpanded = expandedGroups[label];
   const isMultiUser = options && options.length > 1;
-
   const toggleExpand = e => {
     if (isMultiUser && e.target.closest('.group-header')) {
       setExpandedGroups(prev => ({
@@ -30,7 +29,6 @@ const Group = props => {
       }));
     }
   };
-
   return (
     <div>
       <div
@@ -45,7 +43,6 @@ const Group = props => {
   );
 };
 
-// Componente personalizado para opciones (tabulación visual)
 const Option = props => {
   const isUser = !props.data.isSingle;
   return (
@@ -55,66 +52,30 @@ const Option = props => {
   );
 };
 
-// Agrupa usuarios por vivienda para ReactSelect
-const agruparUsuariosPorVivienda = (usuarios) => {
-  const agrupados = usuarios.reduce((acc, usuario) => {
-    const viviendaNombre = usuario.vivienda?.nombre || 'Sin vivienda';
-    if (!acc[viviendaNombre]) acc[viviendaNombre] = [];
-    acc[viviendaNombre].push(usuario);
-    return acc;
-  }, {});
-  return Object.entries(agrupados).map(([vivienda, usuariosVivienda]) => {
-    if (usuariosVivienda.length === 1) {
-      return {
-        value: usuariosVivienda[0].id,
-        label: vivienda,
-        isSingle: true,
-        email: usuariosVivienda[0].email
-      };
-    } else {
-      return {
-        label: vivienda,
-        options: usuariosVivienda.map(u => ({
-          value: u.id,
-          label: `${u.nombre} ${u.apellido}`,
-          email: u.email,
-          isSingle: false
-        }))
-      };
-    }
-  });
-};
-
 export default function MisReservas() {
   const [reservas, setReservas] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
+  const [usuariosPlanos, setUsuariosPlanos] = useState([]);
   const [invitacionesActivas, setInvitacionesActivas] = useState({});
   const [formStates, setFormStates] = useState({});
+  const [showExternos, setShowExternos] = useState({});
   const [loading, setLoading] = useState(true);
   const [expandedGroups, setExpandedGroups] = useState({});
-
-  const fetchReservasDelUsuario = async () => {
-    try {
-      const response = await fetchReservations({ user: 'me' });
-      return Array.isArray(response.data) ? response.data : [];
-    } catch (error) {
-      console.error("Error obteniendo reservas:", error);
-      return [];
-    }
-  };
+  const [invitadosFrecuentes, setInvitadosFrecuentes] = useState([]);
+  const [nuevoInvitadoExterno, setNuevoInvitadoExterno] = useState({ email: '', nombre: '' });
 
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        const [reservasData, usuariosResponse] = await Promise.all([
-          fetchReservasDelUsuario(),
-          fetchUsuariosComunidad()
+        const [reservasData, usuariosResponse, invitadosResponse] = await Promise.all([
+          fetchReservations({ user: 'me' }),
+          fetchUsuariosComunidad(),
+          fetchInvitadosFrecuentes()
         ]);
-        const usuariosData = Array.isArray(usuariosResponse)
-          ? usuariosResponse
-          : (usuariosResponse?.data || []);
-        setReservas(Array.isArray(reservasData) ? reservasData : []);
-        setUsuarios(agruparUsuariosPorVivienda(usuariosData));
+        setReservas(reservasData.data);
+        setUsuarios(agruparUsuariosPorVivienda(usuariosResponse.data));
+        setUsuariosPlanos(usuariosResponse.data);
+        setInvitadosFrecuentes(invitadosResponse.data);
       } catch (error) {
         console.error("Error cargando datos:", error);
       } finally {
@@ -123,6 +84,61 @@ export default function MisReservas() {
     };
     cargarDatos();
   }, []);
+
+  // Agrupa usuarios y define displayName para cada caso
+  const agruparUsuariosPorVivienda = (usuarios) => {
+    const agrupados = usuarios.reduce((acc, usuario) => {
+      const viviendaNombre = usuario.vivienda?.nombre || 'Sin vivienda';
+      if (!acc[viviendaNombre]) acc[viviendaNombre] = [];
+      acc[viviendaNombre].push(usuario);
+      return acc;
+    }, {});
+    return Object.entries(agrupados).map(([vivienda, usuariosVivienda]) => {
+      if (usuariosVivienda.length === 1) {
+        // Solo un usuario en la vivienda: muestra solo el nombre de la vivienda
+        return {
+          value: usuariosVivienda[0].id,
+          label: vivienda,
+          displayName: vivienda,
+          email: usuariosVivienda[0].email,
+          isSingle: true
+        };
+      } else {
+        // Más de un usuario: muestra vivienda + nombre
+        return {
+          label: vivienda,
+          options: usuariosVivienda.map(u => ({
+            value: u.id,
+            label: `${u.nombre} ${u.apellido}`,
+            displayName: `${vivienda} - ${u.nombre} ${u.apellido}`,
+            email: u.email,
+            isSingle: false
+          }))
+        };
+      }
+    });
+  };
+
+  // Filtra invitados externos frecuentes para excluir usuarios de la comunidad
+  const opcionesCombinadas = [
+    ...usuarios,
+    {
+      label: "Invitados externos frecuentes",
+      options: invitadosFrecuentes
+        .filter(invitado => {
+          const emailsUsuariosComunidad = usuariosPlanos.map(u => u.email);
+          return !emailsUsuariosComunidad.includes(invitado.email);
+        })
+        .map(ie => ({
+          value: ie.email,
+          label: `${ie.nombre_invitado} (${ie.email})`,
+          displayName: `${ie.nombre_invitado} (${ie.email})`,
+          isExterno: true,
+          email: ie.email,
+          nombre: ie.nombre_invitado
+        }))
+    }
+  ];
 
   const handleFormChange = (reservaId, field, value) => {
     setFormStates(prev => ({
@@ -134,29 +150,41 @@ export default function MisReservas() {
     }));
   };
 
+  // Alternancia independiente por reserva
+  const toggleShowExternos = (reservaId) => {
+    setShowExternos(prev => ({
+      ...prev,
+      [reservaId]: !prev[reservaId]
+    }));
+  };
+
   const manejarInvitacion = async (reservaId) => {
     try {
-      const { emails, selectedUsers } = formStates[reservaId] || {};
-      const usuariosSeleccionados = selectedUsers?.map(u => u.isSingle ? { email: u.email } : { id: u.value }) || [];
-      await invitarJugadores(reservaId, {
-        emails: [
-          ...(emails?.split(',').map(e => e.trim()).filter(e => e) || []),
-          ...usuariosSeleccionados.map(u => u.email).filter(Boolean)
-        ],
-        usuarios: usuariosSeleccionados.map(u => u.id).filter(Boolean)
-      });
-      const nuevasReservas = await fetchReservasDelUsuario();
-      setReservas(nuevasReservas);
+      const { selectedUsers, invitacionesExternas } = formStates[reservaId] || {};
+      const invitaciones = [
+        ...(selectedUsers?.map(u => ({
+          email: u.email,
+          nombre: u.displayName || u.label
+        })) || []),
+        ...(invitacionesExternas || [])
+      ];
+      if (invitaciones.length > 3) {
+        alert("Sólo puedes invitar hasta 3 personas por reserva.");
+        return;
+      }
+      await invitarJugadores(reservaId, { invitaciones });
+      const nuevasReservas = await fetchReservations({ user: 'me' });
+      setReservas(nuevasReservas.data);
       setFormStates(prev => ({
         ...prev,
-        [reservaId]: { emails: '', selectedUsers: [] }
+        [reservaId]: { selectedUsers: [], invitacionesExternas: [] }
       }));
     } catch (error) {
       console.error("Error invitando jugadores:", error.response?.data);
+      alert("Error al enviar invitaciones: " + (error.response?.data?.error || "Intente nuevamente"));
     }
   };
 
-  // FUNCIÓN PARA ELIMINAR INVITACIONES EN TIEMPO REAL
   const handleEliminarInvitacion = async (invitacionId, reservaId) => {
     try {
       await eliminarInvitacion(invitacionId);
@@ -170,7 +198,7 @@ export default function MisReservas() {
         return reserva;
       }));
     } catch (error) {
-      console.error("Error eliminando invitación:", error.response?.data);
+      console.error("Error eliminando invitación:", error);
       alert("No se pudo eliminar la invitación");
     }
   };
@@ -200,9 +228,7 @@ export default function MisReservas() {
   return (
     <div className="container">
       {reservas.length === 0 ? (
-        <div className="alert alert-info mt-4">
-          No tienes reservas actualmente
-        </div>
+        <div className="alert alert-info mt-4">No tienes reservas actualmente</div>
       ) : (
         reservas.map(reserva => (
           <div key={reserva.id} className="card mb-3">
@@ -214,6 +240,27 @@ export default function MisReservas() {
                     {reserva.timeslot.start_time?.slice(0,5)} - {reserva.timeslot.end_time?.slice(0,5)}
                   </span>
                 )}
+                {/* RESUMEN DE INVITACIONES */}
+                <span className="ms-3">
+                  {(() => {
+                    const total = reserva.invitaciones?.length || 0;
+                    const aceptadas = reserva.invitaciones?.filter(i => i.estado === 'aceptada').length || 0;
+                    if (total === 0) return <span className="badge bg-secondary">Sin invitados</span>;
+                    if (total === 1) return (
+                      <span>
+                        <span className="badge bg-info">1 invitado</span>
+                        {aceptadas > 0 && <span className="badge bg-success ms-2">{aceptadas} aceptado</span>}
+                      </span>
+                    );
+                    if (total > 1) return (
+                      <span>
+                        <span className="badge bg-info">{total} invitados</span>
+                        {aceptadas > 0 && <span className="badge bg-success ms-2">{aceptadas} aceptados</span>}
+                      </span>
+                    );
+                    return null;
+                  })()}
+                </span>
               </div>
               <div className="d-flex gap-2">
                 <button 
@@ -236,65 +283,181 @@ export default function MisReservas() {
             
             {invitacionesActivas[reserva.id] && (
               <div className="card-body">
-                <ReactSelect
-                  options={usuarios}
-                  isMulti
-                  components={{ Group, Option, DropdownIndicator: () => null, IndicatorSeparator: () => null }}
-                  onChange={selected => handleFormChange(reserva.id, 'selectedUsers', selected)}
-                  value={formStates[reserva.id]?.selectedUsers || []}
-                  placeholder="Buscar por vivienda..."
-                  noOptionsMessage={() => "No hay usuarios disponibles"}
-                  expandedGroups={expandedGroups}
-                  setExpandedGroups={setExpandedGroups}
-                  menuPortalTarget={document.body}
-                />
-                
-                <div className="mt-3">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Añadir emails externos (separar por comas)"
-                    value={formStates[reserva.id]?.emails || ''}
-                    onChange={(e) => handleFormChange(reserva.id, 'emails', e.target.value)}
-                  />
-                </div>
-
-                <div className="mt-3 d-flex justify-content-between align-items-center">
+                <div className="mb-3">
                   <button 
-                    className="btn btn-primary"
-                    onClick={() => manejarInvitacion(reserva.id)}
-                    disabled={
-                      ((formStates[reserva.id]?.selectedUsers?.length || 0) + 
-                      (formStates[reserva.id]?.emails?.split(',').filter(e => e).length || 0)) > 3
-                    }
+                    className={`btn ${!showExternos[reserva.id] ? 'btn-primary' : 'btn-outline-primary'} me-2`}
+                    onClick={() => toggleShowExternos(reserva.id)}
                   >
-                    Invitar (
-                      {(formStates[reserva.id]?.selectedUsers?.length || 0) + 
-                      (formStates[reserva.id]?.emails?.split(',').filter(e => e).length || 0)}
-                      /3)
+                    Invitar usuarios
+                  </button>
+                  <button 
+                    className={`btn ${showExternos[reserva.id] ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => toggleShowExternos(reserva.id)}
+                  >
+                    Invitar externos
                   </button>
                 </div>
 
+                {!showExternos[reserva.id] ? (
+                  <ReactSelect
+                    options={opcionesCombinadas}
+                    isMulti
+                    components={{
+                      Group,
+                      Option,
+                      MultiValueLabel: props => (
+                        <components.MultiValueLabel {...props}>
+                          {props.data.displayName || props.data.label}
+                        </components.MultiValueLabel>
+                      ),
+                      MultiValueRemove: props => (
+                        <components.MultiValueRemove {...props}>
+                          <span title="Quitar" style={{ color: '#dc3545', cursor: 'pointer' }}>&times;</span>
+                        </components.MultiValueRemove>
+                      )
+                    }}
+                    onChange={selected => handleFormChange(reserva.id, 'selectedUsers', selected)}
+                    value={formStates[reserva.id]?.selectedUsers || []}
+                    placeholder="Buscar por vivienda o invitados externos frecuentes..."
+                    noOptionsMessage={() => "No hay usuarios disponibles"}
+                    expandedGroups={expandedGroups}
+                    setExpandedGroups={setExpandedGroups}
+                    menuPortalTarget={document.body}
+                  />
+                ) : (
+                  <div className="row g-2 align-items-end mb-2">
+                    <div className="col-md-5">
+                      <input
+                        type="email"
+                        className="form-control"
+                        placeholder="Email del invitado externo"
+                        value={nuevoInvitadoExterno.email}
+                        onChange={e => setNuevoInvitadoExterno({ ...nuevoInvitadoExterno, email: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-md-5">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Nombre completo"
+                        value={nuevoInvitadoExterno.nombre}
+                        onChange={e => setNuevoInvitadoExterno({ ...nuevoInvitadoExterno, nombre: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-md-2">
+                      <button
+                        className="btn btn-success w-100"
+                        onClick={() => {
+                          if (!nuevoInvitadoExterno.email || !nuevoInvitadoExterno.nombre) return;
+                          const yaExiste = (formStates[reserva.id]?.invitacionesExternas || []).some(
+                            inv => inv.email === nuevoInvitadoExterno.email
+                          );
+                          if (!yaExiste) {
+                            handleFormChange(reserva.id, 'invitacionesExternas', [
+                              ...(formStates[reserva.id]?.invitacionesExternas || []),
+                              nuevoInvitadoExterno
+                            ]);
+                          }
+                          setNuevoInvitadoExterno({ email: '', nombre: '' });
+                        }}
+                      >
+                        Añadir
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Lista de invitados externos añadidos antes de enviar */}
+                {(formStates[reserva.id]?.invitacionesExternas || []).length > 0 && (
+                  <div className="mb-3">
+                    <ul className="list-group">
+                      {formStates[reserva.id].invitacionesExternas.map((inv, idx) => (
+                        <li
+                          key={idx}
+                          className="list-group-item d-flex justify-content-between align-items-center"
+                        >
+                          <span>
+                            <strong>{inv.nombre}</strong>
+                            <span className="text-muted ms-2">({inv.email})</span>
+                          </span>
+                          <button
+                            className="btn btn-link btn-sm text-danger"
+                            style={{ textDecoration: 'none' }}
+                            onClick={() => {
+                              handleFormChange(
+                                reserva.id,
+                                'invitacionesExternas',
+                                formStates[reserva.id].invitacionesExternas.filter((_, i) => i !== idx)
+                              );
+                            }}
+                            title="Eliminar invitado externo"
+                          >
+                            <i className="bi bi-x-circle" style={{ fontSize: '1.3em' }}></i>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="mt-3 d-flex justify-content-between align-items-center">
+                  <button 
+                    className="btn btn-success"
+                    onClick={() => manejarInvitacion(reserva.id)}
+                    disabled={
+                      ((formStates[reserva.id]?.selectedUsers?.length || 0) +
+                      (formStates[reserva.id]?.invitacionesExternas?.length || 0)) > 3
+                    }
+                  >
+                    Invitar (
+                    {(formStates[reserva.id]?.selectedUsers?.length || 0) +
+                     (formStates[reserva.id]?.invitacionesExternas?.length || 0)}
+                    /3)
+                  </button>
+                </div>
+
+                {/* Invitaciones actuales con visualización inteligente */}
                 <div className="mt-3">
                   <h6>Invitaciones actuales:</h6>
-                  {reserva.invitaciones?.map(invitacion => (
-                    <div key={invitacion.id} className="d-flex justify-content-between align-items-center mb-2">
-                      <div>
-                        {invitacion.invitado?.nombre || invitacion.email} - 
-                        <span className={`badge ${ESTADOS_COLORES[invitacion.estado]} ms-2`}>
-                          {invitacion.estado}
-                        </span>
-                      </div>
-                      {invitacion.estado === 'pendiente' && (
-                        <button 
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleEliminarInvitacion(invitacion.id, reserva.id)}
-                        >
-                          Eliminar
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                  <ul className="list-group">
+                    {reserva.invitaciones?.map(invitacion => {
+                      let displayText = invitacion.email;
+                      if (invitacion.invitado) {
+                        const usuario = usuariosPlanos.find(u => u.id === invitacion.invitado);
+                        if (usuario) {
+                          const viviendaUsuarios = usuariosPlanos.filter(
+                            u => u.vivienda?.nombre === usuario.vivienda?.nombre
+                          );
+                          if (viviendaUsuarios.length === 1) {
+                            displayText = usuario.vivienda?.nombre || usuario.nombre || usuario.email;
+                          } else {
+                            displayText = `${usuario.vivienda?.nombre || ''} - ${usuario.nombre} ${usuario.apellido}`;
+                          }
+                        }
+                      } else if (invitacion.nombre_invitado) {
+                        displayText = `${invitacion.nombre_invitado} (${invitacion.email})`;
+                      }
+                      return (
+                        <li key={invitacion.id} className="list-group-item d-flex justify-content-between align-items-center">
+                          <div>
+                            <strong>{displayText}</strong>
+                            <span className={`badge ${ESTADOS_COLORES[invitacion.estado]} ms-3`}>
+                              {invitacion.estado}
+                            </span>
+                          </div>
+                          {invitacion.estado === 'pendiente' && (
+                            <button 
+                              className="btn btn-danger btn-sm"
+                              onClick={() => handleEliminarInvitacion(invitacion.id, reserva.id)}
+                              title="Eliminar invitación"
+                            >
+                              Eliminar
+                            </button>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
               </div>
             )}
