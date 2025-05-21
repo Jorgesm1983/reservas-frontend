@@ -2,7 +2,13 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { DateRangePicker } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
-import { fetchReservations, fetchTimeSlots, fetchViviendas, deleteReservation, fetchCourts } from '../services/ApiService';
+import {
+  fetchReservations,
+  fetchTimeSlots,
+  fetchViviendas,
+  deleteReservation,
+  fetchCourts
+} from '../services/ApiService';
 import { es } from 'date-fns/locale';
 import { format } from 'date-fns';
 
@@ -18,7 +24,7 @@ export default function ReservationList() {
   const [timeSlots, setTimeSlots] = useState([]);
   const [viviendas, setViviendas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [courts, setCourts] = useState([]); // ← Añadir estado para courts
+  const [courts, setCourts] = useState([]);
 
   // Cargar datos para selects y detectar si es staff
   useEffect(() => {
@@ -31,7 +37,7 @@ export default function ReservationList() {
         ]);
         setTimeSlots(tsRes.data);
         setViviendas(vRes.data);
-        setCourts(cRes.data); // ← Guardar courts en estado
+        setCourts(cRes.data);
       } catch (error) {
         console.error("Error fetching filters:", error);
       }
@@ -41,29 +47,35 @@ export default function ReservationList() {
   }, []);
 
   // Obtener reservas filtradas
-    const fetchFilteredReservations = useCallback(async () => {
-      const params = {
-        date_after: format(filters.startDate, 'yyyy-MM-dd'),
-        date_before: format(filters.endDate, 'yyyy-MM-dd'),
-        timeslot: filters.timeslot,
-        vivienda: filters.vivienda
-      };
+  const fetchFilteredReservations = useCallback(async () => {
+    const params = {
+      date_after: format(filters.startDate, 'yyyy-MM-dd'),
+      date_before: format(filters.endDate, 'yyyy-MM-dd'),
+      timeslot: filters.timeslot,
+      vivienda: filters.vivienda
+    };
     try {
       const res = await fetchReservations(params);
-      setReservations(Array.isArray(res.data?.results) ? res.data.results : []);
+      // Soporta tanto array plano como paginado
+      const allReservations = Array.isArray(res.data?.results)
+        ? res.data.results
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
+      setReservations(allReservations);
     } catch (error) {
       console.error("Error fetching reservations:", error.response?.data);
       setReservations([]);
     } finally {
       setLoading(false);
     }
-  }, [filters]); // ← Añadir dependencia
+  }, [filters]);
 
   // Actualizar reservas cada vez que cambian los filtros
   useEffect(() => {
     fetchFilteredReservations();
     // eslint-disable-next-line
-  }, [filters]);
+  }, [filters, fetchFilteredReservations]);
 
   // Cambiar fechas del filtro
   const handleDateChange = (ranges) => {
@@ -77,10 +89,7 @@ export default function ReservationList() {
   // Cambiar selects de filtro
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFilters(prev => ({ ...prev, [name]: value }));
   };
 
   // Eliminar reserva (solo staff)
@@ -96,90 +105,82 @@ export default function ReservationList() {
     }
   };
 
+  // Para DateRangePicker
+  const selectionRange = {
+    startDate: filters.startDate,
+    endDate: filters.endDate,
+    key: 'selection'
+  };
+
   return (
-    <div className="container mt-4">
-      <div className="card mb-4">
-        <div className="card-body">
-          <h5 className="card-title">Filtros</h5>
-          <div className="row g-3">
-            <div className="col-md-4">
-              <label className="form-label">Rango de fechas</label>
-              <DateRangePicker
-                ranges={[{
-                  startDate: filters.startDate,
-                  endDate: filters.endDate,
-                  key: 'selection'
-                }]}
-                onChange={handleDateChange}
-                locale={es}
-                maxDate={new Date()}
-                shownDate={filters.startDate}
-                rangeColors={["#3d91ff"]}
-              />
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">Tramo horario</label>
-              <select 
-                className="form-select"
-                name="timeslot"
-                value={filters.timeslot}
-                onChange={handleFilterChange}
-              >
-                <option value="">Todos</option>
-                {timeSlots.map(ts => (
-                  <option key={ts.id} value={ts.id}>
-                    {ts.start_time.slice(0,5)} - {ts.end_time.slice(0,5)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">Vivienda</label>
-              <select
-                className="form-select"
-                name="vivienda"
-                value={filters.vivienda}
-                onChange={handleFilterChange}
-              >
-                <option value="">Todas</option>
-                {viviendas.map(v => (
-                  <option key={v.id} value={v.id}>{v.nombre}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+    <div className="container">
+      <h2>Listado de reservas</h2>
+      <div className="row mb-3">
+        <div className="col-md-4">
+          <label>Rango de fechas:</label>
+          <DateRangePicker
+            ranges={[selectionRange]}
+            onChange={handleDateChange}
+            locale={es}
+            showMonthAndYearPickers={true}
+            rangeColors={['#0d6efd']}
+            maxDate={new Date(new Date().setFullYear(new Date().getFullYear() + 1))}
+          />
+        </div>
+        <div className="col-md-2">
+          <label>Horario:</label>
+          <select
+            className="form-select"
+            name="timeslot"
+            value={filters.timeslot}
+            onChange={handleFilterChange}
+          >
+            <option value="">Todos</option>
+            {timeSlots.map(ts => (
+              <option key={ts.id} value={ts.id}>
+                {ts.start_time.slice(0, 5)} - {ts.end_time.slice(0, 5)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="col-md-2">
+          <label>Vivienda:</label>
+          <select
+            className="form-select"
+            name="vivienda"
+            value={filters.vivienda}
+            onChange={handleFilterChange}
+          >
+            <option value="">Todas</option>
+            {viviendas.map(v => (
+              <option key={v.id} value={v.id}>{v.nombre}</option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {loading ? (
-        <div className="text-center my-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Cargando...</span>
-          </div>
-        </div>
-      ) : (
-        <table className="table">
+      <div className="table-responsive">
+        <table className="table table-bordered table-hover">
           <thead>
             <tr>
               <th>Fecha</th>
               <th>Hora</th>
               <th>Pista</th>
-              {isStaff ? (
-                <>
-                  <th>Nombre</th>
-                  <th>Apellido</th>
-                  <th>Vivienda</th>
-                </>
-              ) : (
-                <th>Vivienda</th>
-              )}
+              <th>Nombre y Apellido</th>
+              <th>Vivienda</th>
               {isStaff && <th>Acciones</th>}
             </tr>
           </thead>
           <tbody>
-            {reservations.length === 0 ? (
+            {loading ? (
               <tr>
-                <td colSpan={isStaff ? 7 : 5} className="text-center text-muted">
+                <td colSpan={isStaff ? 6 : 5} className="text-center">
+                  Cargando...
+                </td>
+              </tr>
+            ) : reservations.length === 0 ? (
+              <tr>
+                <td colSpan={isStaff ? 6 : 5} className="text-center">
                   No hay reservas en este rango
                 </td>
               </tr>
@@ -188,24 +189,20 @@ export default function ReservationList() {
                 <tr key={res.id}>
                   <td>{format(new Date(res.date), 'dd/MM/yyyy')}</td>
                   <td>
-                    {timeSlots.find(ts => ts.id === res.timeslot)?.start_time?.slice(0,5) || '--:--'} - 
-                    {timeSlots.find(ts => ts.id === res.timeslot)?.end_time?.slice(0,5) || '--:--'}
+                    {timeSlots.find(ts => ts.id === (res.timeslot?.id || res.timeslot))?.start_time?.slice(0,5) || '--:--'}
+                    {" - "}
+                    {timeSlots.find(ts => ts.id === (res.timeslot?.id || res.timeslot))?.end_time?.slice(0,5) || '--:--'}
                   </td>
-                  <td>{courts.find(c => c.id === res.court)?.name || 'Sin pista'}</td>
-                  {isStaff ? (
-                    <>
-                      <td>{res.user?.nombre || ''}</td>
-                      <td>{res.user?.apellido || ''}</td>
-                      <td>{res.user?.vivienda?.nombre || 'Sin vivienda'}</td>
-                    </>
-                  ) : (
-                    <td>{res.user?.vivienda?.nombre || 'Sin vivienda'}</td>
-                  )}
+                  <td>{courts.find(c => c.id === (res.court?.id || res.court))?.name || 'Sin pista'}</td>
+                  <td>
+                    {res.user?.nombre || ''}{res.user?.apellido ? ' ' + res.user.apellido : ''}
+                  </td>
+                  <td>{res.user?.vivienda?.nombre || 'Sin vivienda'}</td>
                   {isStaff && (
                     <td>
                       <button
-                        onClick={() => handleDelete(res.id)}
                         className="btn btn-danger btn-sm"
+                        onClick={() => handleDelete(res.id)}
                       >
                         Cancelar
                       </button>
@@ -216,7 +213,7 @@ export default function ReservationList() {
             )}
           </tbody>
         </table>
-      )}
+      </div>
     </div>
   );
 }
