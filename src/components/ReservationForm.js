@@ -70,9 +70,12 @@ export default function ReservationForm() {
     setSuccessMessage('');
 
     try {
+
+      const formattedDate = new Date(form.date).toISOString().split('T')[0];
+
       const reservationData = {
         court: parseInt(form.court, 10),
-        date: form.date,
+        date: formattedDate,
         timeslot: parseInt(form.timeslot, 10),
       };
 
@@ -83,9 +86,13 @@ export default function ReservationForm() {
     } catch (error) {
       if (error.response) {
         if (error.response.status === 409) {
-          setError('⛔ ' + error.response.data.detail);
+          setError('⛔ ' + (error.response.data.error || error.response.data.detail));
+        } else if (error.response.data?.error) {
+          setError('⚠️ Error: ' + error.response.data.error);
+        } else if (error.response.data?.non_field_errors) {
+          setError('⛔ ' + error.response.data.non_field_errors[0]);
         } else {
-          setError('⚠️ Error: ' + (error.response.data.error || 'Error desconocido'));
+          setError('⚠️ Error: ' + (error.response.data.detail || 'Error desconocido'));
         }
       } else {
         setError('🚨 Error de conexión - verifica tu conexión a internet');
