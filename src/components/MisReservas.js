@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactSelect, { components } from 'react-select';
 import {
-  fetchReservations,
+  fetchMyReservations,
   fetchUsuariosComunidad,
   invitarJugadores,
   eliminarInvitacion,
@@ -85,7 +85,7 @@ export default function MisReservas() {
     const cargarDatos = async () => {
       try {
         const [reservasData, usuariosResponse, invitadosResponse] = await Promise.all([
-          fetchReservations({ user: 'me' }),
+          fetchMyReservations({ user: 'me' }),
           fetchUsuariosComunidad(),
           fetchInvitadosFrecuentes()
         ]);
@@ -199,7 +199,7 @@ export default function MisReservas() {
     await invitarJugadores(reservaId, { invitaciones });
     // Refresca reservas y contactos externos tras invitar
     const [nuevasReservas, nuevosContactos] = await Promise.all([
-      fetchReservations({ user: 'me' }),
+      fetchMyReservations({ user: 'me' }),
       fetchInvitadosFrecuentes()
     ]);
     setReservas(nuevasReservas.data);

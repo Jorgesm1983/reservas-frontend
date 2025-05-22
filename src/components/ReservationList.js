@@ -1,7 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { DateRangePicker } from 'react-date-range';
-import 'react-date-range/dist/styles.css';
-import 'react-date-range/dist/theme/default.css';
 import {
   fetchReservations,
   fetchTimeSlots,
@@ -9,24 +6,40 @@ import {
   deleteReservation,
   fetchCourts
 } from '../services/ApiService';
-import { es } from 'date-fns/locale';
 import { format } from 'date-fns';
+
+const PAGE_SIZE = 20;
+
+function getMonthDateRange(date = new Date()) {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  return {
+    start: format(firstDay, 'yyyy-MM-dd'),
+    end: format(lastDay, 'yyyy-MM-dd')
+  };
+}
 
 export default function ReservationList() {
   const [reservations, setReservations] = useState([]);
   const [isStaff, setIsStaff] = useState(false);
-  const [filters, setFilters] = useState({
-    startDate: new Date(new Date().setDate(new Date().getDate() - 7)),
-    endDate: new Date(),
-    timeslot: '',
-    vivienda: ''
+  const [filters, setFilters] = useState(() => {
+    const { start, end } = getMonthDateRange();
+    return {
+      startDate: start,
+      endDate: end,
+      timeslot: '',
+      vivienda: ''
+    };
   });
   const [timeSlots, setTimeSlots] = useState([]);
   const [viviendas, setViviendas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [courts, setCourts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
-  // Cargar datos para selects y detectar si es staff
   useEffect(() => {
     const fetchFiltersData = async () => {
       try {
@@ -46,53 +59,49 @@ export default function ReservationList() {
     setIsStaff(localStorage.getItem('is_staff') === 'true');
   }, []);
 
-  // Obtener reservas filtradas
   const fetchFilteredReservations = useCallback(async () => {
+    setLoading(true);
     const params = {
-      date_after: format(filters.startDate, 'yyyy-MM-dd'),
-      date_before: format(filters.endDate, 'yyyy-MM-dd'),
-      timeslot: filters.timeslot,
-      vivienda: filters.vivienda
+      page,
+      page_size: PAGE_SIZE
     };
+    if (filters.startDate) params.date_after = filters.startDate;
+    if (filters.endDate) params.date_before = filters.endDate;
+    if (filters.timeslot) params.timeslot = filters.timeslot;
+    if (filters.vivienda) params.vivienda = filters.vivienda;
     try {
       const res = await fetchReservations(params);
-      // Soporta tanto array plano como paginado
-      const allReservations = Array.isArray(res.data?.results)
-        ? res.data.results
-        : Array.isArray(res.data)
-        ? res.data
-        : [];
-      setReservations(allReservations);
+      // DRF Pagination: results + count
+      if (Array.isArray(res.data?.results)) {
+        setReservations(res.data.results);
+        setTotal(res.data.count || 0);
+      } else if (Array.isArray(res.data)) {
+        setReservations(res.data);
+        setTotal(res.data.length);
+      } else {
+        setReservations([]);
+        setTotal(0);
+      }
     } catch (error) {
       console.error("Error fetching reservations:", error.response?.data);
       setReservations([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, page]);
 
-  // Actualizar reservas cada vez que cambian los filtros
   useEffect(() => {
     fetchFilteredReservations();
     // eslint-disable-next-line
-  }, [filters, fetchFilteredReservations]);
+  }, [filters, page, fetchFilteredReservations]);
 
-  // Cambiar fechas del filtro
-  const handleDateChange = (ranges) => {
-    setFilters(prev => ({
-      ...prev,
-      startDate: ranges.selection.startDate,
-      endDate: ranges.selection.endDate
-    }));
-  };
-
-  // Cambiar selects de filtro
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
+    setPage(1); // Reset to first page on filter change
   };
 
-  // Eliminar reserva (solo staff)
   const handleDelete = async (id) => {
     if (window.confirm("¿Seguro que quieres cancelar esta reserva?")) {
       try {
@@ -105,26 +114,31 @@ export default function ReservationList() {
     }
   };
 
-  // Para DateRangePicker
-  const selectionRange = {
-    startDate: filters.startDate,
-    endDate: filters.endDate,
-    key: 'selection'
-  };
+  // Paginación simple
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <div className="container">
       <h2>Listado de reservas</h2>
-      <div className="row mb-3">
-        <div className="col-md-4">
-          <label>Rango de fechas:</label>
-          <DateRangePicker
-            ranges={[selectionRange]}
-            onChange={handleDateChange}
-            locale={es}
-            showMonthAndYearPickers={true}
-            rangeColors={['#0d6efd']}
-            maxDate={new Date(new Date().setFullYear(new Date().getFullYear() + 1))}
+      <div className="row mb-3 align-items-end">
+        <div className="col-md-2">
+          <label>Desde:</label>
+          <input
+            type="date"
+            className="form-control"
+            name="startDate"
+            value={filters.startDate}
+            onChange={handleFilterChange}
+          />
+        </div>
+        <div className="col-md-2">
+          <label>Hasta:</label>
+          <input
+            type="date"
+            className="form-control"
+            name="endDate"
+            value={filters.endDate}
+            onChange={handleFilterChange}
           />
         </div>
         <div className="col-md-2">
@@ -214,6 +228,31 @@ export default function ReservationList() {
           </tbody>
         </table>
       </div>
+
+      {/* Paginación */}
+      {totalPages > 1 && (
+        <nav className="mt-3">
+          <ul className="pagination justify-content-center">
+            <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
+              <button className="page-link" onClick={() => setPage(page - 1)} disabled={page === 1}>
+                Anterior
+              </button>
+            </li>
+            {Array.from({ length: totalPages }, (_, idx) => (
+              <li key={idx + 1} className={`page-item ${page === idx + 1 ? 'active' : ''}`}>
+                <button className="page-link" onClick={() => setPage(idx + 1)}>
+                  {idx + 1}
+                </button>
+              </li>
+            ))}
+            <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
+              <button className="page-link" onClick={() => setPage(page + 1)} disabled={page === totalPages}>
+                Siguiente
+              </button>
+            </li>
+          </ul>
+        </nav>
+      )}
     </div>
   );
 }

@@ -48,9 +48,10 @@ export const createCourt = data => API.post('courts/', data);
 export const createTimeSlot = data => API.post('timeslots/', data);
 export const fetchViviendas = () => API.get('obtener_viviendas');
 export const fetchUsuariosComunidad = () => API.get('usuarios-comunidad/');
-export const invitarJugadores = (reservaId, data) => API.post(`/reservations/${reservaId}/invitar/`, data);
+export const invitarJugadores = (reservaId, data) => API.post(`/mis-reservas/${reservaId}/invitar/`, data);
 export const eliminarInvitacion = (invitacionId) => API.delete(`/invitaciones/${invitacionId}/`);
 export const fetchInvitadosFrecuentes = () => API.get('invitaciones-frecuentes/');
+export const fetchMyReservations = (params) => API.get('mis-reservas/', { params });
 
 
 
