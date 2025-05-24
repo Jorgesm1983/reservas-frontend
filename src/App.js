@@ -8,6 +8,15 @@ import ReservationList from './components/ReservationList';
 import RegistroUsuario from './components/RegistroUsuario';
 import MisReservas from './components/MisReservas';
 
+import AdminDashboard from './admin/AdminDashboard';
+import AdminUsuarios from './admin/AdminUsuarios';
+import AdminPistas from './admin/AdminPistas';
+import AdminTurnos from './admin/AdminTurnos';
+import AdminReservas from './admin/AdminReservas';
+import AdminViviendas from './admin/AdminViviendas';
+import AdminInvitaciones from './admin/AdminInvitaciones';
+import AdminInvitadosExternos from './admin/AdminInvitadosExternos';
+import AdminComunidades from './admin/AdminComunidades';
 
 
 function PrivateRoute({ children }) {
@@ -23,8 +32,16 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-
-        <Route
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+            <Route path="/admin/pistas" element={<AdminPistas />} />
+            <Route path="/admin/turnos" element={<AdminTurnos />} />
+            <Route path="/admin/reservas" element={<AdminReservas />} />
+            <Route path="/admin/viviendas" element={<AdminViviendas />} />
+            <Route path="/admin/invitaciones" element={<AdminInvitaciones />} />
+            <Route path="/admin/invitados" element={<AdminInvitadosExternos />} />
+            <Route path="/admin/comunidades" element={<AdminComunidades />} />
+                    <Route
           path="/"
           element={
             <PrivateRoute>

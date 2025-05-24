@@ -39,21 +39,52 @@ API.interceptors.response.use(
 
 // Endpoints
 export const fetchCourts = () => API.get('courts/');
+export const createCourt = (data) => API.post('courts/', data);
+export const updateCourt = (id, data) => API.put(`courts/${id}/`, data);
+export const deleteCourt = (id) => API.delete(`courts/${id}/`);
+
 export const fetchTimeSlots = () => API.get('timeslots/');
+export const createTimeSlot = (data) => API.post('timeslots/', data);
+export const updateTimeSlot = (id, data) => API.put(`timeslots/${id}/`, data);
+export const deleteTimeSlot = (id) => API.delete(`timeslots/${id}/`);
+
 export const fetchReservations = (params) => API.get('reservations/', { params });
 export const createReservation = data => API.post('reservations/', data);
 export const deleteReservation = id => API.delete(`reservations/${id}/`);  // ← Añadido
+export const updateReservation = (id, data) => API.put(`reservations/${id}/`, data);
+
 export const fetchUsers = () => API.get('users/');
-export const createCourt = data => API.post('courts/', data);
-export const createTimeSlot = data => API.post('timeslots/', data);
+export const createUser = (data) => API.post('users/', data);
+export const updateUser = (id, data) => API.put(`users/${id}/`, data);
+export const deleteUser = (id) => API.delete(`users/${id}/`);
+
+
 export const fetchViviendas = () => API.get('obtener_viviendas');
+export const createVivienda = (data) => API.post('viviendas/', data);
+export const updateVivienda = (id, data) => API.put(`viviendas/${id}/`, data);
+export const deleteVivienda = (id) => API.delete(`viviendas/${id}/`);
+
 export const fetchUsuariosComunidad = () => API.get('usuarios-comunidad/');
 export const invitarJugadores = (reservaId, data) => API.post(`/mis-reservas/${reservaId}/invitar/`, data);
 export const eliminarInvitacion = (invitacionId) => API.delete(`/invitaciones/${invitacionId}/`);
 export const fetchInvitadosFrecuentes = () => API.get('invitaciones-frecuentes/');
 export const fetchMyReservations = (params) => API.get('mis-reservas/', { params });
 
+export const fetchInvitaciones = () => API.get('invitaciones/');
+export const createInvitacion = (data) => API.post('invitaciones/', data);
+export const updateInvitacion = (id, data) => API.put(`invitaciones/${id}/`, data);
+export const deleteInvitacion = (id) => API.delete(`invitaciones/${id}/`);
 
+export const fetchInvitadosExternos = () => API.get('invitaciones-frecuentes/');
+export const createInvitadoExterno = (data) => API.post('invitaciones-frecuentes/', data);
+export const updateInvitadoExterno = (id, data) => API.put(`invitaciones-frecuentes/${id}/`, data);
+export const deleteInvitadoExterno = (id) => API.delete(`invitaciones-frecuentes/${id}/`);
+export const deleteInvitadoExternoByEmail = (email) => API.delete(`invitados-externos/${email}/`);
+
+export const fetchComunidades = () => API.get('comunidades/');
+export const createComunidad = (data) => API.post('comunidades/', data);
+export const updateComunidad = (id, data) => API.put(`comunidades/${id}/`, data);
+export const deleteComunidad = (id) => API.delete(`comunidades/${id}/`);
 
 // Autenticación
 export const login = async (email, password) => {
