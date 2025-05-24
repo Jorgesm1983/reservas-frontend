@@ -5,7 +5,8 @@ import {
   updateUser,
   deleteUser,
   fetchViviendas,
-  fetchComunidades
+  fetchComunidades,
+  changeUserPassword
 } from '../services/ApiService';
 
 export default function AdminUsuarios() {
@@ -22,6 +23,10 @@ export default function AdminUsuarios() {
     comunidad: ''
   });
   const [loading, setLoading] = useState(true);
+
+  // Para el cambio de contraseña
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
 
   // Cargar datos al montar el componente
   useEffect(() => {
@@ -45,9 +50,12 @@ export default function AdminUsuarios() {
   const handleOpenModal = (mode, user = null) => {
     setModal({ open: true, mode, user });
     setForm(user ? {
-      ...user,
+      nombre: user.nombre || '',
+      apellido: user.apellido || '',
+      email: user.email || '',
+      is_staff: user.is_staff || false,
       vivienda: user.vivienda?.id || '',
-      comunidad: user.vivienda?.community || user.community?.id || ''
+      comunidad: user.community?.id || ''
     } : {
       nombre: '',
       apellido: '',
@@ -78,7 +86,7 @@ export default function AdminUsuarios() {
       email: form.email,
       is_staff: form.is_staff,
       vivienda_id: form.vivienda || null,
-      community_id: form.comunidad || null  // <--- Cambia 'comunidad' por 'community_id'
+      community_id: form.comunidad || null
     };
     if (modal.mode === 'add') {
       const res = await createUser(payload);
@@ -96,6 +104,15 @@ export default function AdminUsuarios() {
       await deleteUser(id);
       setUsuarios(usuarios.filter(u => u.id !== id));
     }
+  };
+
+  // Cambiar contraseña
+  const handleChangePassword = async (userId) => {
+    if (!newPassword) return;
+    await changeUserPassword(userId, { new_password: newPassword });
+    setShowPasswordModal(false);
+    setNewPassword('');
+    alert('Contraseña actualizada');
   };
 
   if (loading) return <p>Cargando usuarios...</p>;
@@ -121,11 +138,12 @@ export default function AdminUsuarios() {
               <td>{u.nombre} {u.apellido}</td>
               <td>{u.email}</td>
               <td>{u.vivienda?.nombre || '-'}</td>
-              <td>{u.vivienda?.community || u.community?.name || '-'}</td>
+              <td>{u.community?.name || '-'}</td>
               <td>{u.is_staff ? 'Sí' : 'No'}</td>
               <td>
                 <button className="btn btn-primary btn-sm me-2" onClick={() => handleOpenModal('edit', u)}>Editar</button>
-                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u.id)}>Eliminar</button>
+                <button className="btn btn-danger btn-sm me-2" onClick={() => handleDelete(u.id)}>Eliminar</button>
+                <button className="btn btn-warning btn-sm" onClick={() => { setModal({ ...modal, user: u }); setShowPasswordModal(true); }}>Cambiar contraseña</button>
               </td>
             </tr>
           ))}
@@ -203,6 +221,34 @@ export default function AdminUsuarios() {
               </div>
               <div className="modal-footer">
                 <button className="btn btn-secondary" type="button" onClick={handleCloseModal}>Cancelar</button>
+                <button className="btn btn-primary" type="submit">Guardar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para cambio de contraseña */}
+      {showPasswordModal && modal.user && (
+        <div className="modal show d-block" tabIndex="-1" style={{ background: '#0003' }}>
+          <div className="modal-dialog">
+            <form className="modal-content" onSubmit={e => { e.preventDefault(); handleChangePassword(modal.user.id); }}>
+              <div className="modal-header">
+                <h5 className="modal-title">Cambiar contraseña para {modal.user.nombre} {modal.user.apellido}</h5>
+                <button type="button" className="btn-close" onClick={() => setShowPasswordModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="Nueva contraseña"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" type="button" onClick={() => setShowPasswordModal(false)}>Cancelar</button>
                 <button className="btn btn-primary" type="submit">Guardar</button>
               </div>
             </form>

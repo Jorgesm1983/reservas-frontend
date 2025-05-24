@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:8000/api/',  // ← /api/ es crítico
+  baseURL: 'http://192.168.1.46:8000/api/',  // ← /api/ es crítico
   withCredentials: true,
   headers: {
     'X-Requested-With': 'XMLHttpRequest',
@@ -57,6 +57,8 @@ export const fetchUsers = () => API.get('users/');
 export const createUser = (data) => API.post('users/', data);
 export const updateUser = (id, data) => API.put(`users/${id}/`, data);
 export const deleteUser = (id) => API.delete(`users/${id}/`);
+export const changeUserPassword = (userId, data) =>
+  API.post(`usuarios/${userId}/cambiar_password/`, data);
 
 
 export const fetchViviendas = () => API.get('viviendas/');
@@ -85,6 +87,9 @@ export const fetchComunidades = () => API.get('comunidades/');
 export const createComunidad = (data) => API.post('comunidades/', data);
 export const updateComunidad = (id, data) => API.put(`comunidades/${id}/`, data);
 export const deleteComunidad = (id) => API.delete(`comunidades/${id}/`);
+
+export const solicitarResetPassword = ({ email }) =>
+  API.post('reset-password/', { email });
 
 // Autenticación
 export const login = async (email, password) => {

@@ -1,6 +1,14 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 .App {
   text-align: center;
 }
+
+
 
 .App-logo {
   height: 40vmin;
@@ -35,4 +43,41 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+.login-bg {
+  background: #0e2340 !important;
+
+}
+.footer-login-azul {
+  background: #0e2340 !important;
+  color: #fff !important;
+  border-top: 1px solid #22335a;
+  letter-spacing: 0.5px;
+}
+.footer-login-gris {
+  background: #f5f7fa !important;
+  color: #222 !important;
+  border-top: 1px solid #e2e4e8;
+  letter-spacing: 0.5px;
+}
+input::placeholder {
+  color: #888 !important;
+  opacity: 1;
+}
+.form-control:focus {
+  box-shadow: none !important;
+  border-color: #c6ff00 !important;
+}
+
+
+.d-flex.flex-column.main-wrapper {
+  min-height: 100dvh !important; /* Nuevo: altura real visible en móviles */
+  display: flex;
+  flex-direction: column;
 }

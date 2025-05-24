@@ -9,7 +9,6 @@ function RegistroUsuario() {
     password: '',
     vivienda_id: ''
   });
-  
   const [viviendas, setViviendas] = useState([]);
   const [mensaje, setMensaje] = useState('');
   const [errores, setErrores] = useState({});
@@ -22,12 +21,7 @@ function RegistroUsuario() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    // Validación básica en tiempo real
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (!value.trim()) {
       setErrores(prev => ({ ...prev, [name]: 'Este campo es requerido' }));
     } else {
@@ -37,146 +31,154 @@ function RegistroUsuario() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validación final antes de enviar
     const nuevosErrores = {};
     Object.entries(formData).forEach(([key, value]) => {
       if (!value.trim() && key !== 'vivienda_id') {
         nuevosErrores[key] = 'Este campo es requerido';
       }
     });
-    
     if (Object.keys(nuevosErrores).length > 0) {
       setErrores(nuevosErrores);
       return;
     }
-
     try {
       const response = await fetch('/api/registro_usuario', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-      
       const data = await response.json();
-      
       if (!response.ok) throw new Error(data.error || 'Error en el registro');
-      
       setMensaje(data.message || 'Registro exitoso! Redirigiendo...');
       setTimeout(() => window.location.href = '/login', 2000);
-      
     } catch (error) {
       setMensaje(error.message);
     }
   };
 
   return (
-    <div className="container mt-5">
-      <div className="card shadow mx-auto" style={{ maxWidth: '500px' }}>
-        <div className="card-body">
-          <h2 className="card-title text-center mb-4">Registro de Usuario</h2>
-          
-          <form onSubmit={handleSubmit}>
-            {/* Campos Nombre y Apellido */}
-            <div className="row g-3">
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label">Nombre</label>
-                  <input
-                    type="text"
-                    className={`form-control ${errores.nombre && 'is-invalid'}`}
-                    name="nombre"
-                    placeholder="Ej: Juan"
-                    value={formData.nombre}
-                    onChange={handleChange}
-                    required
-                  />
-                  {errores.nombre && <div className="invalid-feedback">{errores.nombre}</div>}
-                </div>
-              </div>
-              
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label">Apellido</label>
-                  <input
-                    type="text"
-                    className={`form-control ${errores.apellido && 'is-invalid'}`}
-                    name="apellido"
-                    placeholder="Ej: Pérez"
-                    value={formData.apellido}
-                    onChange={handleChange}
-                    required
-                  />
-                  {errores.apellido && <div className="invalid-feedback">{errores.apellido}</div>}
-                </div>
-              </div>
-            </div>
-
-            {/* Email */}
-            <div className="mb-3">
-              <label className="form-label">Email</label>
-              <input
-                type="email"
-                className={`form-control ${errores.email && 'is-invalid'}`}
-                name="email"
-                placeholder="tucorreo@ejemplo.com"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-              {errores.email && <div className="invalid-feedback">{errores.email}</div>}
-            </div>
-
-            {/* Contraseña */}
-            <div className="mb-3">
-              <label className="form-label">Contraseña</label>
-              <input
-                type="password"
-                className={`form-control ${errores.password && 'is-invalid'}`}
-                name="password"
-                placeholder="Mínimo 8 caracteres"
-                value={formData.password}
-                onChange={handleChange}
-                minLength="8"
-                required
-              />
-              {errores.password && <div className="invalid-feedback">{errores.password}</div>}
-            </div>
-
-            {/* Selección de Vivienda */}
-            <div className="mb-4">
-              <label className="form-label">Vivienda</label>
-              <select
-                className={`form-select ${errores.vivienda_id && 'is-invalid'}`}
-                name="vivienda_id"
-                value={formData.vivienda_id}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Seleccione su vivienda</option>
-                {viviendas.map(v => (
-                  <option key={v.id} value={v.id}>{v.nombre}</option>
-                ))}
-              </select>
-              {errores.vivienda_id && <div className="invalid-feedback">{errores.vivienda_id}</div>}
-            </div>
-
-            <button type="submit" className="btn btn-primary w-100">
-              Registrarse
-            </button>
-          </form>
-
-          <div className="mt-3 text-center">
-            ¿Ya tienes cuenta? <Link to="/login" className="text-decoration-none">Inicia sesión</Link>
-          </div>
-          
-          {mensaje && (
-            <div className={`mt-3 alert ${mensaje.includes('exitoso') ? 'alert-success' : 'alert-danger'}`}>
-              {mensaje}
-            </div>
-          )}
-        </div>
+    <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-center">
+      {/* Logo y punto verde */}
+      <div className="mb-4 text-center position-relative" style={{ width: '100%' }}>
+        <span style={{
+          fontFamily: 'Montserrat, Arial, sans-serif',
+          fontSize: '2.5rem',
+          fontWeight: 'bold',
+          color: '#fff',
+          letterSpacing: '1px',
+          position: 'relative',
+          display: 'inline-block',
+          paddingRight: 20
+        }}>
+          PistaReserva
+          <span style={{
+            display: 'inline-block',
+            width: 14,
+            height: 14,
+            background: '#c6ff00',
+            borderRadius: '50%',
+            position: 'absolute',
+            right: -18,
+            top: '50%',
+            transform: 'translateY(-50%)'
+          }}></span>
+        </span>
       </div>
+      <div className="mb-3 text-white-50 text-center" style={{ fontSize: '1.1rem' }}>
+        Crea tu cuenta
+      </div>
+      <form
+        onSubmit={handleSubmit}
+        style={{ width: '100%', maxWidth: 370 }}
+        className="text-center"
+        autoComplete="off"
+      >
+        <div className="mb-3">
+          <input
+            className="form-control form-control-lg rounded-pill border-0"
+            placeholder="Nombre"
+            name="nombre"
+            value={formData.nombre}
+            onChange={handleChange}
+            style={{ background: 'rgba(255,255,255,0.95)' }}
+            required
+          />
+          {errores.nombre && <small className="text-danger">{errores.nombre}</small>}
+        </div>
+        <div className="mb-3">
+          <input
+            className="form-control form-control-lg rounded-pill border-0"
+            placeholder="Apellido"
+            name="apellido"
+            value={formData.apellido}
+            onChange={handleChange}
+            style={{ background: 'rgba(255,255,255,0.95)' }}
+            required
+          />
+          {errores.apellido && <small className="text-danger">{errores.apellido}</small>}
+        </div>
+        <div className="mb-3">
+          <input
+            className="form-control form-control-lg rounded-pill border-0"
+            placeholder="Email"
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            style={{ background: 'rgba(255,255,255,0.95)' }}
+            required
+          />
+          {errores.email && <small className="text-danger">{errores.email}</small>}
+        </div>
+        <div className="mb-3">
+          <input
+            className="form-control form-control-lg rounded-pill border-0"
+            placeholder="Contraseña"
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            style={{ background: 'rgba(255,255,255,0.95)' }}
+            required
+          />
+          {errores.password && <small className="text-danger">{errores.password}</small>}
+        </div>
+        <div className="mb-3">
+          <select
+            className="form-select form-select-lg rounded-pill border-0"
+            name="vivienda_id"
+            value={formData.vivienda_id}
+            onChange={handleChange}
+            style={{ background: 'rgba(255,255,255,0.95)' }}
+            required
+          >
+            <option value="">Selecciona vivienda</option>
+            {viviendas.map(v => (
+              <option key={v.id} value={v.id}>{v.nombre}</option>
+            ))}
+          </select>
+          {errores.vivienda_id && <small className="text-danger">{errores.vivienda_id}</small>}
+        </div>
+        {mensaje && <div className="alert alert-info">{mensaje}</div>}
+        <button
+          type="submit"
+          className="btn w-100 rounded-pill mb-2"
+          style={{
+            background: '#c6ff00',
+            color: '#222',
+            fontWeight: 'bold',
+            border: 'none',
+            fontSize: '1.1rem'
+          }}
+        >
+          Registrarse
+        </button>
+        <div className="d-flex flex-column align-items-center mt-2">
+          <Link to="/login" className="text-decoration-none mb-2" style={{ color: '#c6ff00', fontWeight: 500 }}>
+            ¿Ya tienes cuenta? Inicia sesión
+          </Link>
+        </div>
+      </form>
     </div>
   );
 }

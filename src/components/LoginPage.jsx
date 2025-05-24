@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { login } from '../services/ApiService';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -13,79 +12,105 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    console.log('Intentando login con:', email, password);
-
     try {
       const response = await login(email, password);
-
-      console.log('Login correcto:', response.data);
-
-      // Guarda datos adicionales si el backend los devuelve
-      if (response.data.nombre) {
-        localStorage.setItem('email', response.data.email);
-      }
-      if (response.data.user_id) {
-        localStorage.setItem('user_id', response.data.user_id);
-      }
-        // ← Aquí guarda is_staff
-      if (response.data.is_staff !== undefined) {
-        localStorage.setItem('is_staff', response.data.is_staff);
-      }
-
+      if (response.data.nombre) localStorage.setItem('nombre', response.data.nombre);
+      if (response.data.email) localStorage.setItem('email', response.data.email);
+      if (response.data.user_id) localStorage.setItem('user_id', response.data.user_id);
+      if (response.data.is_staff !== undefined) localStorage.setItem('is_staff', response.data.is_staff);
+      if (response.data.access) localStorage.setItem('access', response.data.access);
+      if (response.data.refresh) localStorage.setItem('refresh', response.data.refresh);
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
-
-      console.log('Tokens guardados:', {
-        accessToken: localStorage.getItem('access'),
-        refreshToken: localStorage.getItem('refresh'),
-      });
-
-      navigate('/');
+      navigate('/reservar');
     } catch (err) {
       let errorMessage = 'Usuario o contraseña incorrectos';
       if (err.response && err.response.data) {
         errorMessage = err.response.data.detail || errorMessage;
       }
       setError(errorMessage);
-      console.error('Error en login:', err);
     }
   };
 
   return (
-    <div className="container mt-5">
-      <h2>Iniciar sesión</h2>
-      <form onSubmit={handleLogin}>
+    <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-center">
+      <div className="mb-4 text-center position-relative" style={{ width: '100%' }}>
+        <span style={{
+          fontFamily: 'Montserrat, Arial, sans-serif',
+          fontSize: '2.5rem',
+          fontWeight: 'bold',
+          color: '#fff',
+          letterSpacing: '1px',
+          position: 'relative',
+          display: 'inline-block',
+          paddingRight: 20
+        }}>
+          PistaReserva
+          <span style={{
+            display: 'inline-block',
+            width: 14,
+            height: 14,
+            background: '#c6ff00',
+            borderRadius: '50%',
+            position: 'absolute',
+            right: -18,
+            top: '50%',
+            transform: 'translateY(-50%)'
+          }}></span>
+        </span>
+      </div>
+      <div className="mb-3 text-white-50 text-center" style={{ fontSize: '1.1rem' }}>
+        Inicia sesión en tu cuenta
+      </div>
+      <form
+        onSubmit={handleLogin}
+        style={{ width: '100%', maxWidth: 370 }}
+        className="text-center"
+        autoComplete="off"
+      >
         <div className="mb-3">
-          <label htmlFor="email" className="form-label">Email</label>
           <input
-            type="email"
-            className="form-control"
-            id="email"
+            type="text"
+            className="form-control form-control-lg rounded-pill border-0"
+            placeholder="Usuario"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            onChange={e => setEmail(e.target.value)}
+            autoFocus
+            style={{ background: 'rgba(255,255,255,0.95)' }}
           />
         </div>
-
         <div className="mb-3">
-          <label htmlFor="password" className="form-label">Contraseña</label>
           <input
             type="password"
-            className="form-control"
-            id="password"
+            className="form-control form-control-lg rounded-pill border-0"
+            placeholder="Contraseña"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete='current-password'
-            required
+            onChange={e => setPassword(e.target.value)}
+            style={{ background: 'rgba(255,255,255,0.95)' }}
           />
         </div>
-
-        {error && <div className="alert alert-danger">{error}</div>}
-
-        <button type="submit" className="btn btn-primary">Entrar</button>
+        {error && <div className="alert alert-danger py-1">{error}</div>}
+        <button
+          type="submit"
+          className="btn w-100 rounded-pill mb-2"
+          style={{
+            background: '#c6ff00',
+            color: '#222',
+            fontWeight: 'bold',
+            border: 'none',
+            fontSize: '1.1rem'
+          }}
+        >
+          Iniciar sesión
+        </button>
+        <div className="d-flex flex-column align-items-center mt-2">
+          <Link to="/registro" className="text-decoration-none mb-2" style={{ color: '#c6ff00', fontWeight: 500 }}>
+            ¿No tienes cuenta? Regístrate
+          </Link>
+          <Link to="/recuperar-password" className="text-decoration-none" style={{ color: '#fff', textDecoration: 'underline', fontSize: '0.98rem' }}>
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
       </form>
-      <Link to="/registro" className="btn btn-outline-secondary mt-3">
-        Crear nueva cuenta
-      </Link>
     </div>
   );
 };

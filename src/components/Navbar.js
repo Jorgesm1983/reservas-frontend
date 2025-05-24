@@ -1,23 +1,36 @@
-// src/components/Navbar.js
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Navbar = () => {
+export default function Navbar() {
   const navigate = useNavigate();
+  const token = localStorage.getItem('access');
+  const nombre = localStorage.getItem('nombre');
 
   const handleLogout = () => {
-    localStorage.clear(); // Elimina tokens y datos de usuario
-    navigate('/login');   // Redirige al login
+    localStorage.clear();
+    navigate('/login');
   };
 
-  return (
-    <nav className="navbar navbar-light bg-light mb-4 px-3 d-flex justify-content-between">
-      <span className="navbar-brand mb-0 h1">Reserva de Pista</span>
-      <button className="btn btn-outline-danger" onClick={handleLogout}>
-        Cerrar sesión
-      </button>
-    </nav>
-  );
-};
+  if (!token) return null;
 
-export default Navbar;
+  return (
+    <header>
+      <nav
+        className="navbar navbar-light bg-light px-3 d-flex justify-content-between align-items-center"
+        style={{ minHeight: 60, borderBottom: '1px solid #eee' }}
+      >
+        <div style={{ fontWeight: 'bold', fontSize: '1.4rem', color: '#1769aa', letterSpacing: '1px' }}>
+          PistaReserva
+        </div>
+        <div className="d-flex align-items-center">
+          <span className="me-3" style={{ fontWeight: 500 }}>
+            {nombre ? `Bienvenido, ${nombre}` : ''}
+          </span>
+          <button className="btn btn-outline-danger btn-sm" onClick={handleLogout}>
+            Cerrar sesión
+          </button>
+        </div>
+      </nav>
+    </header>
+  );
+}

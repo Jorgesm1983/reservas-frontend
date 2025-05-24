@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { fetchCourts, fetchTimeSlots, createReservation, fetchReservations } from '../services/ApiService';
-import Navbar from './Navbar';
+
 
 function getReservaWindow() {
   const now = new Date();
@@ -118,7 +118,7 @@ export default function ReservationForm() {
 
   return (
     <>
-      <Navbar />
+     
       <div className="container mt-4">
         <h2>Reservar pista</h2>
         <div className="row">
