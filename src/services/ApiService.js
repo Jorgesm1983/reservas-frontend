@@ -59,7 +59,7 @@ export const updateUser = (id, data) => API.put(`users/${id}/`, data);
 export const deleteUser = (id) => API.delete(`users/${id}/`);
 
 
-export const fetchViviendas = () => API.get('obtener_viviendas');
+export const fetchViviendas = () => API.get('viviendas/');
 export const createVivienda = (data) => API.post('viviendas/', data);
 export const updateVivienda = (id, data) => API.put(`viviendas/${id}/`, data);
 export const deleteVivienda = (id) => API.delete(`viviendas/${id}/`);

@@ -1,38 +1,61 @@
 import React, { useEffect, useState } from 'react';
-// Cambia estos imports por los servicios de la entidad correspondiente
-import { fetchUsers, createUser, updateUser, deleteUser } from '../services/ApiService';
+import {
+  fetchUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  fetchViviendas,
+  fetchComunidades
+} from '../services/ApiService';
 
 export default function AdminUsuarios() {
   const [usuarios, setUsuarios] = useState([]);
+  const [viviendas, setViviendas] = useState([]);
+  const [comunidades, setComunidades] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: 'add', user: null });
-  const [form, setForm] = useState({ nombre: '', apellido: '', email: '', is_staff: false });
+  const [form, setForm] = useState({
+    nombre: '',
+    apellido: '',
+    email: '',
+    is_staff: false,
+    vivienda: '',
+    comunidad: ''
+  });
   const [loading, setLoading] = useState(true);
 
   // Cargar datos al montar el componente
-    useEffect(() => {
-    setLoading(true); // <-- Importante: activa loading antes de pedir datos
-    fetchUsers()
-        .then(res => {
-        if (Array.isArray(res.data)) {
-            setUsuarios(res.data);
-        } else if (Array.isArray(res.data.results)) {
-            setUsuarios(res.data.results);
-        } else {
-            setUsuarios([]);
-        }
-        setLoading(false); // <-- Desactiva loading cuando termina la carga
-        })
-        .catch(error => {
-        setUsuarios([]);
-        setLoading(false); // <-- Desactiva loading también si hay error
-        // (Opcional) puedes mostrar un mensaje de error aquí
-        });
-    }, []);
+  useEffect(() => {
+    setLoading(true);
+    fetchUsers().then(res => {
+      const data = Array.isArray(res.data) ? res.data : res.data.results || [];
+      setUsuarios(data);
+      setLoading(false);
+    });
+    fetchViviendas().then(res => {
+      const data = Array.isArray(res.data) ? res.data : res.data.results || [];
+      setViviendas(data);
+    });
+    fetchComunidades().then(res => {
+      const data = Array.isArray(res.data) ? res.data : res.data.results || [];
+      setComunidades(data);
+    });
+  }, []);
 
   // Abrir modal de alta o edición
   const handleOpenModal = (mode, user = null) => {
     setModal({ open: true, mode, user });
-    setForm(user ? { ...user } : { nombre: '', apellido: '', email: '', is_staff: false });
+    setForm(user ? {
+      ...user,
+      vivienda: user.vivienda?.id || '',
+      comunidad: user.vivienda?.community || user.community?.id || ''
+    } : {
+      nombre: '',
+      apellido: '',
+      email: '',
+      is_staff: false,
+      vivienda: '',
+      comunidad: ''
+    });
   };
 
   const handleCloseModal = () => setModal({ open: false, mode: 'add', user: null });
@@ -40,17 +63,28 @@ export default function AdminUsuarios() {
   // Actualizar formulario
   const handleChange = e => {
     const { name, value, type, checked } = e.target;
-    setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
+    setForm(f => ({
+      ...f,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
   // Guardar alta o edición
   const handleSubmit = async e => {
     e.preventDefault();
+    const payload = {
+      nombre: form.nombre,
+      apellido: form.apellido,
+      email: form.email,
+      is_staff: form.is_staff,
+      vivienda_id: form.vivienda || null,
+      community_id: form.comunidad || null  // <--- Cambia 'comunidad' por 'community_id'
+    };
     if (modal.mode === 'add') {
-      const res = await createUser(form);
+      const res = await createUser(payload);
       setUsuarios([...usuarios, res.data]);
     } else {
-      const res = await updateUser(modal.user.id, form);
+      const res = await updateUser(modal.user.id, payload);
       setUsuarios(usuarios.map(u => (u.id === res.data.id ? res.data : u)));
     }
     handleCloseModal();
@@ -73,9 +107,10 @@ export default function AdminUsuarios() {
       <table className="table table-striped">
         <thead>
           <tr>
-            <th>Nombre</th>
-            <th>Apellido</th>
+            <th>Nombre completo</th>
             <th>Email</th>
+            <th>Vivienda</th>
+            <th>Comunidad</th>
             <th>Staff</th>
             <th>Acciones</th>
           </tr>
@@ -83,9 +118,10 @@ export default function AdminUsuarios() {
         <tbody>
           {usuarios.map(u => (
             <tr key={u.id}>
-              <td>{u.nombre}</td>
-              <td>{u.apellido}</td>
+              <td>{u.nombre} {u.apellido}</td>
               <td>{u.email}</td>
+              <td>{u.vivienda?.nombre || '-'}</td>
+              <td>{u.vivienda?.community || u.community?.name || '-'}</td>
               <td>{u.is_staff ? 'Sí' : 'No'}</td>
               <td>
                 <button className="btn btn-primary btn-sm me-2" onClick={() => handleOpenModal('edit', u)}>Editar</button>
@@ -95,7 +131,7 @@ export default function AdminUsuarios() {
           ))}
         </tbody>
       </table>
-      {/* Modal para alta/edición */}
+
       {modal.open && (
         <div className="modal show d-block" tabIndex="-1" style={{ background: '#0003' }}>
           <div className="modal-dialog">
@@ -105,11 +141,63 @@ export default function AdminUsuarios() {
                 <button type="button" className="btn-close" onClick={handleCloseModal}></button>
               </div>
               <div className="modal-body">
-                <input className="form-control mb-2" name="nombre" value={form.nombre} onChange={handleChange} placeholder="Nombre" required />
-                <input className="form-control mb-2" name="apellido" value={form.apellido} onChange={handleChange} placeholder="Apellido" required />
-                <input className="form-control mb-2" name="email" value={form.email} onChange={handleChange} placeholder="Email" required />
-                <div className="form-check">
-                  <input className="form-check-input" type="checkbox" name="is_staff" checked={form.is_staff} onChange={handleChange} id="staffCheck" />
+                <input
+                  className="form-control mb-2"
+                  name="nombre"
+                  value={form.nombre}
+                  onChange={handleChange}
+                  placeholder="Nombre"
+                  required
+                />
+                <input
+                  className="form-control mb-2"
+                  name="apellido"
+                  value={form.apellido}
+                  onChange={handleChange}
+                  placeholder="Apellido"
+                />
+                <input
+                  className="form-control mb-2"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="Email"
+                  type="email"
+                  required
+                />
+                <select
+                  className="form-select mb-2"
+                  name="vivienda"
+                  value={form.vivienda}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Selecciona vivienda</option>
+                  {viviendas.map(v => (
+                    <option key={v.id} value={v.id}>{v.nombre}</option>
+                  ))}
+                </select>
+                <select
+                  className="form-select mb-2"
+                  name="comunidad"
+                  value={form.comunidad}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Selecciona comunidad</option>
+                  {comunidades.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <div className="form-check mb-2">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    name="is_staff"
+                    checked={form.is_staff}
+                    onChange={handleChange}
+                    id="staffCheck"
+                  />
                   <label className="form-check-label" htmlFor="staffCheck">Staff</label>
                 </div>
               </div>
