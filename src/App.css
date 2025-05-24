@@ -81,3 +81,14 @@ input::placeholder {
   display: flex;
   flex-direction: column;
 }
+
+.rounded-4 {
+  border-radius: 1.25rem !important;
+}
+.btn-lg {
+  font-size: 1.15rem;
+}
+header {
+  box-shadow: 0 2px 8px 0 rgba(31,38,135,0.07);
+}
+

@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
-import Navbar from './components/Navbar';
+// import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 import ReservationForm from './components/ReservationForm';
@@ -23,6 +23,8 @@ import AdminInvitaciones from './admin/AdminInvitaciones';
 import AdminInvitadosExternos from './admin/AdminInvitadosExternos';
 import AdminComunidades from './admin/AdminComunidades';
 
+import Home from './components/Home';
+
 import './App.css';
 
 function PrivateRoute({ children }) {
@@ -36,7 +38,7 @@ function AppLayout() {
 
   return (
     <div className="d-flex flex-column main-wrapper">
-      {!fondoAzul && <Navbar />}
+      {!fondoAzul}
       {/* Fondo azul solo en login, registro y recuperar */}
       <main className={`flex-grow-1 d-flex flex-column${fondoAzul ? ' login-bg' : ''}`}>
         <Routes>
@@ -44,7 +46,7 @@ function AppLayout() {
           <Route path="/registro" element={<RegistroUsuario />} />
           <Route path="/recuperar-password" element={<RecuperarPassword />} />
 
-          <Route path="/" element={
+          <Route path="/list" element={
             <PrivateRoute>
               <ReservationList />
             </PrivateRoute>
@@ -70,6 +72,7 @@ function AppLayout() {
           <Route path="/admin/invitaciones" element={<RequireStaff><AdminInvitaciones /></RequireStaff>} />
           <Route path="/admin/invitados-externos" element={<RequireStaff><AdminInvitadosExternos /></RequireStaff>} />
           <Route path="/admin/comunidades" element={<RequireStaff><AdminComunidades /></RequireStaff>} />
+          <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -21,7 +21,7 @@ const LoginPage = () => {
       if (response.data.access) localStorage.setItem('access', response.data.access);
       if (response.data.refresh) localStorage.setItem('refresh', response.data.refresh);
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
-      navigate('/reservar');
+      navigate('/');
     } catch (err) {
       let errorMessage = 'Usuario o contraseña incorrectos';
       if (err.response && err.response.data) {
