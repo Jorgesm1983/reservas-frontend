@@ -12,6 +12,7 @@
     "axios": "^1.9.0",
     "bootstrap": "^5.3.6",
     "date-fns": "^2.30.0",
+    "flowbite-react": "^0.10.2",
     "react": "^19.1.0",
     "react-avatar": "^5.0.3",
     "react-calendar": "^5.1.0",
@@ -45,5 +46,13 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.7",
+    "autoprefixer": "^10.4.21",
+    "init": "^0.1.2",
+    "npx": "^10.2.2",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.7"
   }
 }

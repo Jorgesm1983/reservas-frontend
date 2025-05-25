@@ -49,6 +49,13 @@ const Group = props => {
   );
 };
 
+function limpiarNombre(nombreLabel, email) {
+  if (!nombreLabel) return email.split('@')[0];
+  // Si el label es "Sonia (Sonia@jerez.com)", extrae solo "Sonia"
+  const match = nombreLabel.match(/^(.+?)\s*\([^)]+\)$/);
+  return match ? match[1].trim() : nombreLabel.trim();
+}
+
 const Option = props => {
   const isUser = !props.data.isSingle;
   return (
@@ -63,6 +70,7 @@ function isReservaCaducada(reserva) {
   const inicio = new Date(`${reserva.date}T${reserva.timeslot.start_time}`);
   return inicio < new Date();
 }
+
 
 export default function MisReservas() {
   const [reservas, setReservas] = useState([]);
@@ -188,7 +196,7 @@ export default function MisReservas() {
     const invitaciones = [
       ...(selectedUsers?.map(u => ({
         email: u.email,
-        nombre: u.displayName || u.label
+        nombre: limpiarNombre(u.displayName || u.label, u.email)
       })) || []),
       ...(invitacionesExternas || [])
     ];
@@ -214,24 +222,17 @@ export default function MisReservas() {
   }
 };
 
-  const handleEliminarInvitacion = async (invitacionId, reservaId) => {
-    try {
-      await eliminarInvitacion(invitacionId);
-      setReservas(prev => prev.map(reserva => {
-        if (reserva.id === reservaId) {
-          return {
-            ...reserva,
-            invitaciones: reserva.invitaciones.filter(i => i.id !== invitacionId)
-          };
-        }
-        return reserva;
-      }));
-    } catch (error) {
-      console.error("Error eliminando invitación:", error);
-      alert("No se pudo eliminar la invitación");
-    }
-  };
-
+const handleEliminarInvitacion = async (invitacionId, reservaId) => {
+  try {
+    await eliminarInvitacion(invitacionId);
+    // Refresca reservas desde la API para tener datos consistentes y evitar duplicados
+    const nuevasReservas = await fetchMyReservations({ user: 'me' });
+    setReservas(nuevasReservas.data);
+  } catch (error) {
+    console.error("Error eliminando invitación:", error);
+    alert("No se pudo eliminar la invitación");
+  }
+};
   const handleEliminarReserva = async (reservaId) => {
     if (window.confirm("¿Seguro que quieres eliminar esta reserva?")) {
       try {
@@ -382,35 +383,86 @@ export default function MisReservas() {
                       <div className="mt-3">
                         <h6>Invitaciones actuales:</h6>
                         <ul className="list-group">
-                          {reserva.invitaciones?.map(invitacion => {
-                            let displayText = invitacion.email;
-                            if (invitacion.invitado) {
-                              const usuario = usuariosPlanos.find(u => u.id === invitacion.invitado);
-                              if (usuario) {
-                                const viviendaUsuarios = usuariosPlanos.filter(
-                                  u => u.vivienda?.nombre === usuario.vivienda?.nombre
-                                );
-                                if (viviendaUsuarios.length === 1) {
-                                  displayText = usuario.vivienda?.nombre || usuario.nombre || usuario.email;
-                                } else {
-                                  displayText = `${usuario.vivienda?.nombre || ''} - ${usuario.nombre} ${usuario.apellido}`;
-                                }
-                              }
-                            } else if (invitacion.nombre_invitado) {
-                              displayText = `${invitacion.nombre_invitado} (${invitacion.email})`;
-                            }
-                            return (
-                              <li key={invitacion.id} className="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                  <strong>{displayText}</strong>
-                                  <span className={`badge ${ESTADOS_COLORES[invitacion.estado]} ms-3`}>
-                                    {invitacion.estado}
-                                  </span>
-                                </div>
-                              </li>
-                            );
-                          })}
-                        </ul>
+  {[...new Map((reserva.invitaciones || []).map(inv => [inv.email, inv])).values()].map(invitacion => {
+    let displayText = invitacion.email;
+    if (invitacion.invitado) {
+      const usuario = usuariosPlanos.find(u => u.id === invitacion.invitado);
+      if (usuario) {
+        const viviendaUsuarios = usuariosPlanos.filter(
+          u => u.vivienda?.nombre === usuario.vivienda?.nombre
+        );
+        if (viviendaUsuarios.length === 1) {
+          displayText = usuario.vivienda?.nombre || usuario.nombre || usuario.email;
+        } else {
+          displayText = `${usuario.vivienda?.nombre || ''} - ${usuario.nombre} ${usuario.apellido}`;
+        }
+      }
+    } else if (invitacion.nombre_invitado) {
+      displayText = `${invitacion.nombre_invitado} (${invitacion.email})`;
+    }
+    return (
+      <li key={invitacion.id} className="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{displayText}</strong>
+          <span className={`badge ${ESTADOS_COLORES[invitacion.estado]} ms-3`}>
+            {invitacion.estado}
+          </span>
+        </div>
+        {!caducada && invitacion.estado === 'pendiente' && (
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={() => handleEliminarInvitacion(invitacion.id, reserva.id)}
+            title="Eliminar invitación"
+          >
+            Eliminar
+          </button>
+        )}
+      </li>
+    );
+  })}
+</ul>
+
+Sustituye por este bloque (único cambio):
+jsx
+<ul className="list-group">
+  {[...new Map((reserva.invitaciones || []).map(inv => [inv.email, inv])).values()].map(invitacion => {
+    let displayText = invitacion.email;
+    if (invitacion.invitado) {
+      const usuario = usuariosPlanos.find(u => u.id === invitacion.invitado);
+      if (usuario) {
+        const viviendaUsuarios = usuariosPlanos.filter(
+          u => u.vivienda?.nombre === usuario.vivienda?.nombre
+        );
+        if (viviendaUsuarios.length === 1) {
+          displayText = usuario.vivienda?.nombre || usuario.nombre || usuario.email;
+        } else {
+          displayText = `${usuario.vivienda?.nombre || ''} - ${usuario.nombre} ${usuario.apellido}`;
+        }
+      }
+    } else if (invitacion.nombre_invitado) {
+      displayText = `${invitacion.nombre_invitado}`;
+    }
+    return (
+      <li key={invitacion.id} className="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{displayText}</strong>
+          <span className={`badge ${ESTADOS_COLORES[invitacion.estado]} ms-3`}>
+            {invitacion.estado}
+          </span>
+        </div>
+        {!caducada && invitacion.estado === 'pendiente' && (
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={() => handleEliminarInvitacion(invitacion.id, reserva.id)}
+            title="Eliminar invitación"
+          >
+            Eliminar
+          </button>
+        )}
+      </li>
+    );
+  })}
+</ul>
                       </div>
                     </>
                   ) : (
@@ -557,44 +609,45 @@ export default function MisReservas() {
                   <div className="mt-3">
                     <h6>Invitaciones actuales:</h6>
                     <ul className="list-group">
-                      {reserva.invitaciones?.map(invitacion => {
-                        let displayText = invitacion.email;
-                        if (invitacion.invitado) {
-                          const usuario = usuariosPlanos.find(u => u.id === invitacion.invitado);
-                          if (usuario) {
-                            const viviendaUsuarios = usuariosPlanos.filter(
-                              u => u.vivienda?.nombre === usuario.vivienda?.nombre
-                            );
-                            if (viviendaUsuarios.length === 1) {
-                              displayText = usuario.vivienda?.nombre || usuario.nombre || usuario.email;
-                            } else {
-                              displayText = `${usuario.vivienda?.nombre || ''} - ${usuario.nombre} ${usuario.apellido}`;
-                            }
-                          }
-                        } else if (invitacion.nombre_invitado) {
-                          displayText = `${invitacion.nombre_invitado} (${invitacion.email})`;
-                        }
-                        return (
-                          <li key={invitacion.id} className="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                              <strong>{displayText}</strong>
-                              <span className={`badge ${ESTADOS_COLORES[invitacion.estado]} ms-3`}>
-                                {invitacion.estado}
-                              </span>
-                            </div>
-                            {!caducada && invitacion.estado === 'pendiente' && (
-                              <button
-                                className="btn btn-danger btn-sm"
-                                onClick={() => handleEliminarInvitacion(invitacion.id, reserva.id)}
-                                title="Eliminar invitación"
-                              >
-                                Eliminar
-                              </button>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
+  {[...new Map((reserva.invitaciones || []).map(inv => [inv.email, inv])).values()].map(invitacion => {
+    let displayText = invitacion.email;
+    if (invitacion.invitado) {
+      const usuario = usuariosPlanos.find(u => u.id === invitacion.invitado);
+      if (usuario) {
+        const viviendaUsuarios = usuariosPlanos.filter(
+          u => u.vivienda?.nombre === usuario.vivienda?.nombre
+        );
+        if (viviendaUsuarios.length === 1) {
+          displayText = usuario.vivienda?.nombre || usuario.nombre || usuario.email;
+        } else {
+          displayText = `${usuario.vivienda?.nombre || ''} - ${usuario.nombre} ${usuario.apellido}`;
+        }
+      }
+    } else if (invitacion.nombre_invitado) {
+      displayText = `${invitacion.nombre_invitado}`;
+    }
+    return (
+      <li key={invitacion.id} className="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{displayText}</strong>
+          <span className={`badge ${ESTADOS_COLORES[invitacion.estado]} ms-3`}>
+            {invitacion.estado}
+          </span>
+        </div>
+        {!caducada && invitacion.estado === 'pendiente' && (
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={() => handleEliminarInvitacion(invitacion.id, reserva.id)}
+            title="Eliminar invitación"
+          >
+            Eliminar
+          </button>
+        )}
+      </li>
+    );
+  })}
+</ul>
+
                   </div>
                 </div>
               )}

@@ -25,6 +25,7 @@ import AdminComunidades from './admin/AdminComunidades';
 
 import Home from './components/Home';
 
+import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
 function PrivateRoute({ children }) {
