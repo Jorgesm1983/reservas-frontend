@@ -2,6 +2,8 @@
 @import 'flowbite';
 
 
+
+
 html, body {
   height: 100%;
   margin: 0;
@@ -113,4 +115,183 @@ header {
   letter-spacing: 1px;
   cursor: pointer;
 }
+
+/* Modal overlay */
+.inv-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.45); /* Más oscuro y opaco */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1.5rem;
+}
+
+/* Modal content */
+.inv-modal-content {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  max-width: 400px;
+  width: 100%;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  position: relative;
+  animation: modalIn 0.18s cubic-bezier(.4,0,.2,1);
+}
+
+@keyframes modalIn {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Modal title */
+.inv-modal-title {
+  color: #0e2340;
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 1.3rem;
+  font-size: 1.25rem;
+}
+
+/* Modal labels and values */
+.inv-modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; padding: 1.5rem; overflow-y: auto;
+}
+.inv-modal-content {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  max-width: 400px; width: 100%;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  position: relative;
+}
+.inv-modal-title {
+  color: #0e2340;
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 1.3rem;
+  font-size: 1.25rem;
+}
+.inv-modal-label { color: #7e8594; font-weight: 600; }
+.inv-modal-value { color: #0e2340; font-weight: 500; }
+.inv-modal-row { margin-bottom: 0.7rem; font-size: 16px; }
+.inv-modal-row:last-child { margin-bottom: 1.2rem; }
+.inv-modal-actions {
+  display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
+}
+.inv-modal-content button { min-width: 100px; font-weight: 600; }
+
+
+.card-welcome {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+  margin-bottom: 1rem;
+}
+.card-welcome-header {
+  display: flex;
+  justify-content: space-between;
+ align-items: baseline; /* <-- Cambia de center a baseline */
+  margin-bottom: 0.7rem;
+}
+.card-welcome-hello {
+  color: #7e8594;
+  font-size: 15px;
+  font-weight: 500;
+  margin-right: 0.3rem;
+}
+.card-welcome-name {
+  color: #0e2340;
+  font-size: 1.3rem;
+  font-weight: 700;
+  display: inline;
+}
+.card-welcome-stats {
+  color: #0e2340;
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: baseline; /* <-- Asegura baseline también aquí */
+  gap: 0.3rem;
+}
+.card-welcome-partidos {
+  color: #0e2340;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.card-welcome-partidos-label {
+  color: #7e8594;
+  font-size: 0.95rem;
+  margin-left: 0.3rem;
+}
+.card-welcome-weather {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.6rem 0 0.8rem 0;
+}
+.card-welcome-weather-label {
+  color: #7e8594;
+  font-size: 0.98rem;
+  margin-right: 0.3rem;
+  font-weight: 500;
+}
+.card-welcome-weather-icon {
+  width: 32px;
+  height: 32px;
+  background: #f6f8fa;
+  border-radius: 50%;
+  margin-right: 0.3rem;
+}
+.card-welcome-weather-desc {
+  color: #0e2340;
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.card-welcome-inv {
+  background: #fffbe6;
+  color: #0e2340;
+  border: 1px solid #ffe58f;
+  border-radius: 10px;
+  font-size: 14px;
+  padding: 0.7rem 1rem;
+  margin-top: 0.7rem;
+  display: flex;
+  align-items: center;
+}
+
+.btn-admin-custom {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  padding: 0.85em 1.2em;
+  background: linear-gradient(90deg, #fbb034 0%, #ffdd00 100%);
+  color: #0e2340;
+  border: 2px solid #fbb034;
+  border-radius: 1.25rem;
+  font-weight: 700;
+  font-size: 1.08rem;
+  box-shadow: 0 2px 8px rgba(251,176,52,0.09);
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn-admin-custom:hover, .btn-admin-custom:focus {
+  background: linear-gradient(90deg, #ffdd00 0%, #fbb034 100%);
+  color: #0e2340;
+  box-shadow: 0 4px 16px rgba(251,176,52,0.17);
+  text-decoration: none;
+  outline: none;
+}
+
+
 
