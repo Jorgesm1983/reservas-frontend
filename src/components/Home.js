@@ -16,12 +16,12 @@ function getInitials(nombre, email) {
 }
 
 // Componente avatar con tooltip (Flowbite)
-function AvatarInvitado({ nombre, email }) {
+function AvatarInvitado({ nombre, email, esOrganizador }) {
   const initials = getInitials(nombre, email);
   const nombreCompleto = nombre || email;
   return (
     <Tooltip
-      content={<span className="font-bold">{nombreCompleto}</span>}
+      content={<span className="font-bold">{esOrganizador ? "Organizador" : nombreCompleto}</span>}
       trigger="click"
       placement="bottom"
       style="light"
@@ -40,11 +40,12 @@ function AvatarInvitado({ nombre, email }) {
           color: '#fff',
           fontWeight: 700,
           fontSize: 18,
-          border: '2px solid #c6ff00',
+
           marginRight: 16,
           marginBottom: 2,
           letterSpacing: 1,
-          cursor: 'pointer'
+          cursor: 'pointer',
+          border: esOrganizador ? '2px solid gold' : '2px solid #c6ff00',
         }}
       >
         {initials}
@@ -63,6 +64,13 @@ export default function Home() {
   const [invitados, setInvitados] = useState([]);
   const [invitacionActiva, setInvitacionActiva] = useState(null);
   const [isStaff, setIsStaff] = useState(false);
+  const [proximosPartidos, setProximosPartidos] = useState([]);
+  const [indiceProximo, setIndiceProximo] = useState(0);  
+  const partidoActivo = proximosPartidos[indiceProximo];
+  
+  
+  
+  
 
   // 1. Carga datos del dashboard (nombre, partidos, invitaciones)
   useEffect(() => {
@@ -79,40 +87,53 @@ export default function Home() {
         setIsStaff(data.is_staff || false); // <-- Añade esta línea
       });
   }, []);
-
+const [setReloadProxima] = useState(false);
   // 2. Carga el próximo partido y calcula invitados aceptados
-  useEffect(() => {
-    async function cargarProxima() {
-      const today = new Date().toISOString().slice(0, 10);
-      const response = await fetchMyReservations({ date_after: today });
-      const reservas = response.data;
-      if (!reservas.length) {
-        setProxima(null);
-        setInvitados([]);
-        return;
-      }
-      const now = new Date();
-      const reservasOrdenadas = reservas
-        .map(r => ({
-          ...r,
-          fechaHora: new Date(`${r.date}T${r.timeslot?.start_time || '00:00'}`)
-        }))
-        .filter(r => r.fechaHora > now)
-        .sort((a, b) => a.fechaHora - b.fechaHora);
+useEffect(() => {
+  async function cargarProximos() {
+    const today = new Date().toISOString().slice(0, 10);
+    const ahora = new Date();
 
-      const prox = reservasOrdenadas[0] || null;
-      setProxima(prox);
-      setInvitados(
-        prox ? (prox.invitaciones || []).filter(inv => inv.estado === 'aceptada') : []
-      );
+    // 1. Tus reservas propias futuras
+    const responsePropias = await fetchMyReservations({ date_after: today });
+    const propias = (responsePropias.data || []).map(r => ({ ...r, tipo: 'propia' }));
 
-      
-      // --- DEBUG: Verifica la dirección de la pista ---
-    console.log("Proxima reserva:", prox);
-    console.log("Dirección de la pista:", prox?.court?.direccion);
+    // 2. Reservas donde eres invitado y has aceptado
+    let invitadas = [];
+    try {
+      const respInv = await fetch('/api/proximos_partidos_invitado/', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('access')}` }
+      });
+      invitadas = (await respInv.json() || []).map(r => ({ ...r, tipo: 'invitacion' }));
+    } catch (e) {
+      invitadas = [];
     }
-    cargarProxima();
-  }, []);
+
+    // 3. Unifica y filtra solo partidos futuros
+    const todos = [...propias, ...invitadas]
+      .filter(r => {
+        const fechaHora = new Date(`${r.date}T${r.timeslot?.start_time || '00:00'}`);
+        return fechaHora >= ahora;
+      })
+      .sort((a, b) => {
+        const fechaA = new Date(`${a.date}T${a.timeslot?.start_time || '00:00'}`);
+        const fechaB = new Date(`${b.date}T${b.timeslot?.start_time || '00:00'}`);
+        return fechaA - fechaB;
+      });
+
+    setProximosPartidos(todos);
+    setIndiceProximo(0);
+
+    // Mantén compatibilidad con tu lógica actual:
+    setProxima(todos[0] || null);
+    setInvitados(
+      todos[0]?.invitaciones?.filter(inv => inv.estado === 'aceptada') || []
+    );
+  }
+  cargarProximos();
+}, []);
+
+
 
   // Formatea fecha (ejemplo: "miércoles 28")
   function formateaFecha(fecha) {
@@ -205,6 +226,7 @@ function aceptarInvitacion(id, token) {
       // Opcional: muestra un mensaje de éxito
       // Refresca las invitaciones pendientes
       recargarDashboard();
+      setReloadProxima(r => !r); // Esto forzará el useEffect de arriba
       setShowModal(false);
     });
 }
@@ -241,13 +263,15 @@ function recargarDashboard() {
     });
 }
 
-
+console.log("proximosPartidos", proximosPartidos);
+console.log("indiceProximo", indiceProximo);
 
 
   return (
-    <div style={{ background: "#f6f8fa", minHeight: "100vh" }}>
-      <Header />
-      <div className="container py-3" style={{ maxWidth: 480 }}>
+    
+    <div style={{ background: "#f6f8fa"}}>
+      <Header showLogout={true} />
+      <div className="container py-3 flex-grow-1" tyle={{ maxWidth: 480 }}>
         {/* Tarjeta blanca de bienvenida */}
           <div className="card-welcome">
             <div className="card-welcome-header">
@@ -261,7 +285,7 @@ function recargarDashboard() {
               </div>
             </div>
             <div className="card-welcome-weather">
-              <span className="card-welcome-weather-label">Tiempo en tu próximo partido:</span>
+              <span className="card-welcome-weather-label">Tiempo previsto:</span>
               {tiempoPrevisto?.icon && (
             <i
               className={iconMap[tiempoPrevisto.icon]}
@@ -339,51 +363,148 @@ function recargarDashboard() {
           )}
 
 
-        {/* Tarjeta azul del próximo partido */}
-        <div className="mb-4">
-            {proxima && (
-              <div style={{
-                marginBottom: 8,
-                fontWeight: 600,
-                fontSize: 16,
-                color: '#0e2340',
-                letterSpacing: 0.1,
-                textAlign: 'left'
-              }}>
-                Tu próximo partido...
-              </div>
-            )}
-          <div className="rounded shadow-sm p-3" style={{ background: '#0e2340', color: '#fff' }}>
-            {proxima ? (
-              <>
-                <div className="fw-bold mb-1">
-                  <i className="bi bi-calendar-event me-2"></i>
-                  {formateaFecha(proxima.date)} | {proxima.timeslot?.start_time.slice(0, 5)} - {proxima.timeslot?.end_time.slice(0, 5)}
-                </div>
-                <div className="mb-2" style={{ fontSize: '0.97rem' }}>
-                  {proxima.court?.direccion || ''} · {proxima.court?.name || ''}
-                </div>
-                <div className="d-flex justify-content-center align-items-center flex-wrap mt-2" style={{ width: '100%' }}>
-                  {invitados.length > 0 ? (
-                    invitados.map((inv, idx) => (
-                      <AvatarInvitado
-                        key={inv.id || idx}
-                        nombre={inv.nombre_mostrar || inv.nombre_invitado}
-                        email={inv.email}
-                      />
-                    ))
-                  ) : (
-                    <span className="text-white-50" style={{ fontSize: '1rem', marginLeft: 2 }}>
-                      Sin invitados
+{/* Tarjeta azul del próximo partido */}
+<div className="mb-4">
+  {proximosPartidos.length > 0 && (
+    <>
+      {/* Header con flechas y título */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+        width: '100%'
+      }}>
+        {/* Flecha izquierda */}
+        {proximosPartidos.length > 1 ? (
+          <button
+            className="btn btn-link p-0 m-0"
+            style={{
+              color: '#0e2340',
+              fontSize: 22,
+              background: 'none',
+              border: 'none',
+              lineHeight: 1,
+              minWidth: 0,
+              boxShadow: 'none'
+            }}
+            onClick={() => {
+              const nuevo = indiceProximo === 0 ? proximosPartidos.length - 1 : indiceProximo - 1;
+              setIndiceProximo(nuevo);
+              setProxima(proximosPartidos[nuevo]);
+              setInvitados(proximosPartidos[nuevo]?.invitaciones?.filter(inv => inv.estado === 'aceptada') || []);
+            }}
+            aria-label="Partido anterior"
+            type="button"
+          >
+            <i className="bi bi-chevron-left"></i>
+          </button>
+        ) : <span style={{ width: 22 }} />} {/* Espacio para alinear si solo hay un partido */}
+
+        <span style={{
+          fontWeight: 600,
+          fontSize: 16,
+          color: '#0e2340',
+          letterSpacing: 0.1,
+          textAlign: 'center',
+          flex: 1
+        }}>
+          Tu próximo partido...
+        </span>
+
+        {/* Flecha derecha */}
+        {proximosPartidos.length > 1 ? (
+          <button
+            className="btn btn-link p-0 m-0"
+            style={{
+              color: '#0e2340',
+              fontSize: 22,
+              background: 'none',
+              border: 'none',
+              lineHeight: 1,
+              minWidth: 0,
+              boxShadow: 'none'
+            }}
+            onClick={() => {
+              const nuevo = indiceProximo === proximosPartidos.length - 1 ? 0 : indiceProximo + 1;
+              setIndiceProximo(nuevo);
+              setProxima(proximosPartidos[nuevo]);
+              setInvitados(proximosPartidos[nuevo]?.invitaciones?.filter(inv => inv.estado === 'aceptada') || []);
+            }}
+            aria-label="Siguiente partido"
+            type="button"
+          >
+            <i className="bi bi-chevron-right"></i>
+          </button>
+        ) : <span style={{ width: 22 }} />}
+      </div>
+
+      {/* Tarjeta azul */}
+      <div className="rounded shadow-sm p-3" style={{ background: '#0e2340', color: '#fff' }}>
+        {proximosPartidos[indiceProximo] ? (
+          <>
+            <div className="fw-bold mb-1">
+              <i className="bi bi-calendar-event me-2"></i>
+              {formateaFecha(proximosPartidos[indiceProximo].date)} | {proximosPartidos[indiceProximo].timeslot?.start_time.slice(0, 5)} - {proximosPartidos[indiceProximo].timeslot?.end_time.slice(0, 5)}
+            </div>
+            <div className="mb-2" style={{ fontSize: '0.97rem' }}>
+              {proximosPartidos[indiceProximo].court?.direccion || ''} · {proximosPartidos[indiceProximo].court?.name || ''}
+            </div>
+            <div className="d-flex justify-content-center align-items-center flex-wrap mt-2" style={{ width: '100%' }}>
+  {/* Avatar del organizador */}
+  {partidoActivo.user && (
+    <AvatarInvitado
+      nombre={partidoActivo.user.nombre}
+      email={partidoActivo.user.email}
+      esOrganizador
+    />
+  )}
+  {/* Avatares de invitados aceptados, excluyendo al organizador si ya está */}
+  {partidoActivo.invitaciones
+    ?.filter(inv => inv.estado === 'aceptada' && inv.email !== partidoActivo.user.email)
+    .map((inv, idx) => (
+      <AvatarInvitado
+        key={inv.id || idx}
+        nombre={inv.nombre_mostrar || inv.nombre_invitado}
+        email={inv.email}
+      />
+    ))}
+</div>
+            {/* Línea de badges y organizador */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: 10
+                }}>
+                  {/* Badge de invitación aceptada */}
+                  {partidoActivo.tipo === 'invitacion' && (
+                    <span className="badge bg-warning text-dark">Invitación aceptada</span>
+                  )}
+                  {/* Organizador alineado a la derecha */}
+                  {partidoActivo.user && (
+                    <span style={{
+                      fontSize: 14,
+                      color: "#ffd700",
+                      fontWeight: 500,
+                      marginLeft: 8,
+                      marginRight: 2,
+                      flex: 1,
+                      textAlign: 'right'
+                    }}>
+                      Organizador: {partidoActivo.user.nombre || partidoActivo.user.email}
                     </span>
                   )}
                 </div>
-              </>
-            ) : (
-              <div className="text-white-50">No tienes partidos próximos</div>
-            )}
-          </div>
-        </div>
+          </>
+        ) : (
+          <div className="text-white-50">No tienes partidos próximos</div>
+        )}
+      </div>
+    </>
+  )}
+</div>
+
 
         {/* Botones principales */}
         <div className="row g-3 mb-4">

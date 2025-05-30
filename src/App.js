@@ -38,7 +38,7 @@ function AppLayout() {
   const fondoAzul = ['/login', '/registro', '/recuperar-password'].includes(location.pathname);
 
   return (
-    <div className="d-flex flex-column main-wrapper">
+    <div className="d-flex flex-column main-wrapper" style={{ minHeight: '100dvh' }}>
       {!fondoAzul}
       {/* Fondo azul solo en login, registro y recuperar */}
       <main className={`flex-grow-1 d-flex flex-column${fondoAzul ? ' login-bg' : ''}`}>

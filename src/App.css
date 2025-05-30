@@ -16,6 +16,16 @@ html, body {
 
 
 
+.footer {
+  width: 100%;
+  background: #0e2340; /* o el color que corresponda */
+  color: #fff;
+  text-align: center;
+  padding: 16px 0 12px 0;
+  border-top: 1px solid #e6e6e6;
+  /* No uses position: fixed ni absolute aquí */
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -86,6 +96,7 @@ input::placeholder {
   min-height: 100dvh !important; /* Nuevo: altura real visible en móviles */
   display: flex;
   flex-direction: column;
+   background: #f6f8fa; /* Color de fondo de toda la página */
 }
 
 .rounded-4 {
@@ -236,6 +247,7 @@ header {
   align-items: center;
   gap: 0.6rem;
   margin: 0.6rem 0 0.8rem 0;
+  justify-content: center; /* Añade esta línea */
 }
 .card-welcome-weather-label {
   color: #7e8594;
