@@ -14,6 +14,18 @@ html, body {
   text-align: center;
 }
 
+.btn-primary {
+  background: #0e2340 !important;
+  color: #fff !important;
+  border: none !important;
+  font-weight: 600;
+  font-size: 1.08rem;
+}
+.btn-primary:disabled {
+  background: #7e8594 !important;
+  color: #fff !important;
+}
+
 
 
 .footer {
@@ -205,6 +217,7 @@ header {
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   padding: 1.5rem 1.2rem 1.2rem 1.2rem;
   margin-bottom: 1rem;
+
 }
 .card-welcome-header {
   display: flex;
@@ -305,5 +318,207 @@ header {
   outline: none;
 }
 
+.form-select {
+  border-radius: 12px;
+  border: 1.5px solid #e6e6e6;
+  background: #f6f8fa;
+  color: #0e2340;
+  font-weight: 500;
+  font-size: 1.08rem;
+  padding: 0.65rem 1.1rem;
+  margin-bottom: 0.5rem;
+  transition: border-color 0.2s;
+}
+.form-select:focus {
+  border-color: #c6ff00;
+  background: #fff;
+  outline: none;
+}
 
 
+/* === Calendario react-calendar personalizado === */
+.react-calendar {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(31,38,135,0.07);
+  font-family: inherit;
+  margin: 0 auto;
+  padding: 12px 0 18px 0;
+}
+
+.react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: transparent;
+  margin-bottom: 0.5rem;
+  border-radius: 12px 12px 0 0;
+}
+
+.react-calendar__navigation button {
+  min-width: 36px;
+  background: none;
+  border: none;
+  font-size: 1.15rem;
+  color: #0e2340;
+  font-weight: 700;
+  border-radius: 8px;
+  transition: background 0.18s;
+  margin: 0 2px;
+}
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background: #f6f8fa;
+  color: #0e2340;
+}
+.react-calendar__navigation__label {
+  font-weight: 700;
+  font-size: 1.13rem;
+  color: #0e2340;
+  background: none;
+  letter-spacing: 0.04em;
+}
+
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  background: #f6f8fa;
+  font-size: 1.07rem;
+  border-radius: 8px 8px 0 0;
+}
+.react-calendar__month-view__weekdays__weekday {
+  color: #7e8594;
+  font-weight: 600;
+  padding: 7px 0;
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+}
+
+.react-calendar__tile {
+  background: #fff;
+  color: #0e2340;
+  font-weight: 500;
+  font-size: 1.09rem;
+  border-radius: 10px;
+  border: none;
+  padding: 0.6em 0.1em;
+  margin: 2px 0;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+  z-index: 1;
+  box-shadow: none;
+}
+
+/* Día seleccionado */
+.react-calendar__tile--active,
+.react-calendar__tile--rangeStart,
+.react-calendar__tile--rangeEnd {
+  background: #c6ff00 !important;
+  color: #0e2340 !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(198,255,0,0.13);
+  z-index: 2;
+}
+
+/* Día actual */
+.react-calendar__tile--now {
+  background: #e3f9c0 !important;
+  color: #0e2340 !important;
+  font-weight: 700;
+  border: 1.5px solid #c6ff00;
+}
+
+/* Días de fin de semana */
+.react-calendar__tile--weekend {
+  color: #0e2340 !important;
+  background: #fff !important;
+}
+
+/* Días deshabilitados (fuera de rango o inactivos) */
+.react-calendar__tile:disabled,
+.react-calendar__tile--disabled {
+  background: #f6f8fa !important;
+  color: #bdbdbd !important;
+  cursor: not-allowed;
+  opacity: 1 !important;
+  text-decoration: line-through;
+  border-radius: 10px;
+}
+
+/* Hover sobre días activos */
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background: #e3f9c0;
+  color: #0e2340;
+}
+
+/* Quita el borde azul feo de los botones al hacer click */
+.react-calendar button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Ajusta el calendario para móviles */
+@media (max-width: 480px) {
+  .react-calendar {
+    max-width: 98vw;
+    font-size: 1rem;
+  }
+}
+
+.btn-dia {
+  background: #fff;
+  color: #0e2340;
+  border: 2px solid #c6ff00;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  min-width: 76px;
+  padding: 10px 18px;
+  margin: 0 6px;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  box-shadow: none;
+  outline: none;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.btn-dia.selected,
+.btn-dia:active,
+.btn-dia:focus {
+  background: #0e2340;
+  color: #fff;
+  border-color: #0e2340;
+  box-shadow: 0 2px 8px rgba(31,38,135,0.13);
+}
+
+.btn-dia:hover {
+  background: #e3f9c0;
+  color: #0e2340;
+  border-color: #c6ff00;
+}
+
+.btn-primary, .btn.btn-primary, button[type="submit"].btn-primary {
+  width: 100%;
+  background: #0e2340 !important;
+  color: #fff !important;
+  border: none !important;
+  font-weight: 700;
+  font-size: 1.15rem;
+  padding: 14px 0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(31,38,135,0.07);
+  margin-top: 10px;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.btn-primary:disabled {
+  background: #7e8594 !important;
+  color: #fff !important;
+}
+.btn-primary:hover, .btn-primary:focus {
+  background: #22335a !important;
+  box-shadow: 0 4px 16px rgba(31,38,135,0.13);
+}

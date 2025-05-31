@@ -1,10 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
+import React, { useState, useEffect, useRef } from 'react';
+
 import { fetchCourts, fetchTimeSlots, createReservation, fetchReservations } from '../services/ApiService';
 import Header from './Header';
-import Footer from './Footer';
 
 function getReservaWindow() {
   const now = new Date();
@@ -23,6 +20,17 @@ function formatDateLocal(date) {
   return `${year}-${month}-${day}`;
 }
 
+// Genera los días disponibles entre min y max (incluidos)
+function getDiasDisponibles(minDate, maxDate) {
+  const dias = [];
+  let d = new Date(minDate);
+  while (d <= maxDate) {
+    dias.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return dias;
+}
+
 export default function ReservationForm() {
   const [courts, setCourts] = useState([]);
   const [slots, setSlots] = useState([]);
@@ -34,10 +42,10 @@ export default function ReservationForm() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const successTimeout = useRef(null);
 
-  const navigate = useNavigate();
 
-  // Actualiza los límites de fecha cada minuto
+
   useEffect(() => {
     const interval = setInterval(() => setDateLimits(getReservaWindow()), 60 * 1000);
     return () => clearInterval(interval);
@@ -76,7 +84,7 @@ export default function ReservationForm() {
     }
   }, [ocupados, selectedSlot]);
 
-  const isDayDisabled = date => date < dateLimits.min || date > dateLimits.max;
+  const diasDisponibles = getDiasDisponibles(dateLimits.min, dateLimits.max);
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -89,7 +97,7 @@ export default function ReservationForm() {
         date: formatDateLocal(selectedDate),
         timeslot: parseInt(selectedSlot, 10)
       });
-      setSuccessMessage('✅ Reserva creada exitosamente!');
+      setSuccessMessage('✅ Pista reservada con éxito!');
       setSelectedCourt('');
       setSelectedSlot('');
       setSelectedDate(null);
@@ -113,103 +121,138 @@ export default function ReservationForm() {
     }
   };
 
+  useEffect(() => {
+    if (successMessage) {
+      successTimeout.current = setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000); // 3 segundos
+    }
+    return () => {
+      if (successTimeout.current) clearTimeout(successTimeout.current);
+    };
+  }, [successMessage]);
+
   const slotsLibres = slots.filter(slot => !ocupados.includes(String(slot.id)));
   const slotsOcupados = slots.filter(slot => ocupados.includes(String(slot.id)));
 
-  return (
-    <div className="d-flex flex-column main-wrapper" style={{ minHeight: '100dvh' }}>
-      {/* Header con botón de volver al home */}
-      <Header showHomeIcon={true}
-        rightIcon={
-          <button
-            className="btn btn-link"
-            style={{
-              color: '#0e2340',
-              fontSize: 22,
-              background: 'none',
-              border: 'none',
-              lineHeight: 1,
-              minWidth: 0,
-              boxShadow: 'none'
-            }}
-            onClick={() => navigate('/')}
-            aria-label="Volver al home"
-            type="button"
-          >
-            <i className="bi bi-house-door"></i>
-          </button>
-        }
-      />
+            return (
+              <div className="d-flex flex-column main-wrapper" style={{ minHeight: '100dvh' }}>
+                <Header showHomeIcon={true} showLogout={false} />
                 <div className="container py-3 flex-grow-1" style={{ flex: 1, maxWidth: 480 }}>
-          <div className="card-welcome mb-4" style={{ maxWidth: 420, margin: "0 auto" }}>
-            <div className="card-welcome-header">
-              <span className="card-welcome-hello">Nueva reserva</span>
+                  <div className="card-welcome mb-4" style={{ maxWidth: 420, margin: '0 auto', padding: '1.5rem 1.2rem 1.2rem 1.2rem' }}>
+                    <div className="card-reserva-header" style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            marginBottom: 18
+          }}>
+            <div style={{
+              background: '#c6ff00',
+              borderRadius: '50%',
+              width: 48,
+              height: 48,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 8,
+              boxShadow: '0 2px 8px rgba(198,255,0,0.13)'
+            }}>
+              <i className="bi bi-calendar2-plus" style={{
+                color: '#0e2340',
+                fontSize: 26
+              }}></i>
             </div>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label className="form-label">Fecha</label>
-                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                  <Calendar
-                    onChange={setSelectedDate}
-                    value={selectedDate}
-                    minDate={dateLimits.min}
-                    maxDate={dateLimits.max}
-                    tileDisabled={({ date }) => isDayDisabled(date)}
-                    locale="es-ES"
-                  />
-                </div>
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Pista</label>
-                <select
-                  className="form-select"
-                  value={selectedCourt}
-                  onChange={e => setSelectedCourt(e.target.value)}
-                  required
-                >
-                  <option value="">Selecciona pista</option>
-                  {courts.map(court => (
-                    <option key={court.id} value={court.id}>{court.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Horario</label>
-                <select
-                  className="form-select"
-                  value={selectedSlot}
-                  onChange={e => setSelectedSlot(e.target.value)}
-                  required
-                  disabled={!selectedCourt || !selectedDate}
-                >
-                  <option value="">Selecciona horario</option>
-                  {slotsLibres.length > 0 && (
-                    <optgroup label="Horarios disponibles">
-                      {slotsLibres.map(slot => (
-                        <option key={slot.id} value={slot.id}>
-                          {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {slotsOcupados.length > 0 && (
-                    <optgroup label="No disponibles">
-                      {slotsOcupados.map(slot => (
-                        <option key={slot.id} value={slot.id} disabled>
-                          {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
-              </div>
-              {error && <div className="alert alert-danger">{error}</div>}
-              {successMessage && <div className="alert alert-success">{successMessage}</div>}
-              <button className="btn btn-primary w-100" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Reservando...' : 'Reservar'}
-              </button>
-            </form>
+            <div style={{
+              fontWeight: 700,
+              fontSize: 20,
+              color: '#0e2340',
+              marginBottom: 2,
+              letterSpacing: 0.2
+            }}>
+              Nueva reserva
+            </div>
+            <div style={{
+              color: '#7e8594',
+              fontSize: 15,
+              textAlign: 'center',
+              maxWidth: 290,
+              marginTop: 2
+            }}>
+              Elige fecha, pista y horario para reservar tu partido
+            </div>
           </div>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label className="form-label">Fecha</label>
+              <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginBottom: 8 }}>
+                {diasDisponibles.map(dia => (
+                  <button
+                    key={dia.toISOString()}
+                    type="button"
+                    className={`btn-dia${selectedDate && dia.toDateString() === selectedDate.toDateString() ? ' selected' : ''}`}
+                    onClick={() => setSelectedDate(new Date(dia))}
+                  >
+                    {dia.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Pista</label>
+              <select
+                className="form-select"
+                value={selectedCourt}
+                onChange={e => setSelectedCourt(e.target.value)}
+                required
+              >
+                <option value="">Selecciona pista</option>
+                {courts.map(court => (
+                  <option key={court.id} value={court.id}>{court.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Horario</label>
+              <select
+                className="form-select"
+                value={selectedSlot}
+                onChange={e => setSelectedSlot(e.target.value)}
+                required
+                disabled={!selectedCourt || !selectedDate}
+              >
+                <option value="">Selecciona horario</option>
+                {slotsLibres.length > 0 && (
+                  <optgroup label="Horarios disponibles">
+                    {slotsLibres.map(slot => (
+                      <option key={slot.id} value={slot.id}>
+                        {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {slotsOcupados.length > 0 && (
+                  <optgroup label="No disponibles">
+                    {slotsOcupados.map(slot => (
+                      <option key={slot.id} value={slot.id} disabled>
+                        {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            </div>
+            {error && <div className="alert alert-danger">{error}</div>}
+            {successMessage && <div className="alert alert-success">{successMessage}</div>}
+            <button
+              className="btn btn-primary w-100"
+              type="submit"
+              disabled={isSubmitting}
+              style={{ marginTop: 12 }}
+            >
+              {isSubmitting ? 'Reservando...' : 'Reservar'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -61,12 +61,13 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false);
   const [tiempoPrevisto, setTiempoPrevisto] = useState('');
   const [proxima, setProxima] = useState(null);
-  const [invitados, setInvitados] = useState([]);
+  const [, setInvitados] = useState([]);
   const [invitacionActiva, setInvitacionActiva] = useState(null);
   const [isStaff, setIsStaff] = useState(false);
   const [proximosPartidos, setProximosPartidos] = useState([]);
   const [indiceProximo, setIndiceProximo] = useState(0);  
   const partidoActivo = proximosPartidos[indiceProximo];
+  const [loading, setLoading] = useState(true);
   
   
   
@@ -91,25 +92,22 @@ const [setReloadProxima] = useState(false);
   // 2. Carga el próximo partido y calcula invitados aceptados
 useEffect(() => {
   async function cargarProximos() {
+    setLoading(true);
     const today = new Date().toISOString().slice(0, 10);
     const ahora = new Date();
 
-    // 1. Tus reservas propias futuras
-    const responsePropias = await fetchMyReservations({ date_after: today });
-    const propias = (responsePropias.data || []).map(r => ({ ...r, tipo: 'propia' }));
-
-    // 2. Reservas donde eres invitado y has aceptado
-    let invitadas = [];
-    try {
-      const respInv = await fetch('/api/proximos_partidos_invitado/', {
+    // 1. Carga paralela de reservas propias e invitaciones
+    const [responsePropias, respInv] = await Promise.all([
+      fetchMyReservations({ date_after: today }),
+      fetch('/api/proximos_partidos_invitado/', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('access')}` }
-      });
-      invitadas = (await respInv.json() || []).map(r => ({ ...r, tipo: 'invitacion' }));
-    } catch (e) {
-      invitadas = [];
-    }
+      }).then(res => res.ok ? res.json() : [])
+    ]);
 
-    // 3. Unifica y filtra solo partidos futuros
+    // 2. Procesamiento de datos
+    const propias = (responsePropias.data || []).map(r => ({ ...r, tipo: 'propia' }));
+    const invitadas = (respInv || []).map(r => ({ ...r, tipo: 'invitacion' }));
+
     const todos = [...propias, ...invitadas]
       .filter(r => {
         const fechaHora = new Date(`${r.date}T${r.timeslot?.start_time || '00:00'}`);
@@ -124,14 +122,15 @@ useEffect(() => {
     setProximosPartidos(todos);
     setIndiceProximo(0);
 
-    // Mantén compatibilidad con tu lógica actual:
     setProxima(todos[0] || null);
     setInvitados(
       todos[0]?.invitaciones?.filter(inv => inv.estado === 'aceptada') || []
     );
+    setLoading(false);
   }
   cargarProximos();
 }, []);
+
 
 
 
@@ -266,6 +265,15 @@ function recargarDashboard() {
 console.log("proximosPartidos", proximosPartidos);
 console.log("indiceProximo", indiceProximo);
 
+if (loading) {
+  return (
+    <div style={{ textAlign: 'center', padding: '2rem' }}>
+      <div className="spinner-border text-primary" role="status">
+        <span className="visually-hidden">Cargando...</span>
+      </div>
+    </div>
+  );
+}
 
   return (
     
