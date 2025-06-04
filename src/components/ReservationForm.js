@@ -136,7 +136,7 @@ export default function ReservationForm() {
   const slotsOcupados = slots.filter(slot => ocupados.includes(String(slot.id)));
 
             return (
-              <div className="d-flex flex-column main-wrapper" style={{ minHeight: '100dvh' }}>
+              <div style={{background: '#f6f8fa' }}>
                 <Header showHomeIcon={true} showLogout={false} />
                 <div className="container py-3 flex-grow-1" style={{ flex: 1, maxWidth: 480 }}>
                   <div className="card-welcome mb-4" style={{ maxWidth: 420, margin: '0 auto', padding: '1.5rem 1.2rem 1.2rem 1.2rem' }}>

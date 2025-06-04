@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://192.168.1.46:8000/api/',  // ← /api/ es crítico
+  baseURL: 'http://192.168.1.36:8000/api/',  // ← /api/ es crítico
   withCredentials: true,
   headers: {
     'X-Requested-With': 'XMLHttpRequest',
