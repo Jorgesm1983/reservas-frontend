@@ -132,14 +132,39 @@ export default function ReservationForm() {
     };
   }, [successMessage]);
 
-  const slotsLibres = slots.filter(slot => !ocupados.includes(String(slot.id)));
+  const now = new Date();
+
+    const slotsLibres = slots.filter(slot => {
+      if (ocupados.includes(String(slot.id))) return false;
+      if (!selectedDate) return true; // Si no hay fecha seleccionada, muestra todos
+
+      // Construye la fecha-hora de fin del turno
+      const [h, m] = slot.end_time.split(":");
+      const finTurno = new Date(selectedDate);
+      finTurno.setHours(Number(h), Number(m), 0, 0);
+
+      // Si la fecha seleccionada es hoy, solo muestra turnos cuyo fin es posterior a ahora
+      const isToday = selectedDate.toDateString() === now.toDateString();
+      if (isToday) {
+        return finTurno > now;
+      }
+      // Si la fecha es futura, muestra todos
+      return true;
+    });
   const slotsOcupados = slots.filter(slot => ocupados.includes(String(slot.id)));
 
             return (
               <div style={{background: '#f6f8fa' }}>
                 <Header showHomeIcon={true} showLogout={false} />
                 <div className="container py-3 flex-grow-1" style={{ flex: 1, maxWidth: 480 }}>
-                  <div className="card-welcome mb-4" style={{ maxWidth: 420, margin: '0 auto', padding: '1.5rem 1.2rem 1.2rem 1.2rem' }}>
+                        <div className="card-welcome mb-4" style={{
+        maxWidth: 420,
+        margin: '0 auto',
+        padding: '1.5rem 1.2rem 1.2rem 1.2rem',
+        background: '#fff',
+        boxShadow: "0 4px 20px rgba(31,38,135,0.08)",
+          borderTop: "3px solid #c6ff00"
+      }}>
                     <div className="card-reserva-header" style={{
             display: 'flex',
             flexDirection: 'column',

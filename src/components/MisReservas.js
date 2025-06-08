@@ -110,7 +110,7 @@ const MultiValueRemove = props => {
 
 export default function MisReservas() {
   const [reservas, setReservas] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
+  const [, setUsuarios] = useState([]);
   const [usuariosPlanos, setUsuariosPlanos] = useState([]);
   const [invitacionesActivas, setInvitacionesActivas] = useState({});
   const [formStates, setFormStates] = useState({});
@@ -192,27 +192,7 @@ export default function MisReservas() {
     });
   }
 
-  const opcionesCombinadas = [
-    ...usuarios,
-    {
-      label: "Invitados externos frecuentes",
-      options: invitadosFrecuentes
-        .filter(invitado => {
-          const emailsUsuariosComunidad = usuariosPlanos.map(u => u.email);
-          return !emailsUsuariosComunidad.includes(invitado.email);
-        })
-        .map(ie => ({
-          value: ie.email,
-          label: `${ie.nombre_invitado} (${ie.email})`,
-          displayName: `${ie.nombre_invitado} (${ie.email})`,
-          isExterno: true,
-          email: ie.email,
-          nombre: ie.nombre_invitado
-        }))
-    }
-  ];
-
-  const handleFormChange = (reservaId, field, value) => {
+    const handleFormChange = (reservaId, field, value) => {
     setFormStates(prev => ({
       ...prev,
       [reservaId]: {
@@ -231,35 +211,56 @@ export default function MisReservas() {
   };
 
   const manejarInvitacion = async (reservaId) => {
-    try {
-      const { selectedUsers, invitacionesExternas } = formStates[reservaId] || {};
-      const invitaciones = [
-        ...(selectedUsers?.map(u => ({
-          email: u.email,
-          nombre: limpiarNombre(u.displayName || u.label, u.email)
-        })) || []),
-        ...(invitacionesExternas || [])
-      ];
-      if (invitaciones.length > 3) {
-        alert("Sólo puedes invitar hasta 3 personas por reserva.");
-        return;
-      }
-      await invitarJugadores(reservaId, { invitaciones });
-      const [nuevasReservas, nuevosContactos] = await Promise.all([
-        fetchMyReservations({ user: 'me' }),
-        fetchInvitadosFrecuentes()
-      ]);
-      setReservas(nuevasReservas.data);
-      setInvitadosFrecuentes(nuevosContactos.data);
-      setFormStates(prev => ({
-        ...prev,
-        [reservaId]: { selectedUsers: [], invitacionesExternas: [] }
-      }));
-    } catch (error) {
-      console.error("Error invitando jugadores:", error.response?.data);
-      alert("Error al enviar invitaciones: " + (error.response?.data?.error || "Intente nuevamente"));
+  try {
+    const { selectedUsers, invitacionesExternas } = formStates[reservaId] || {};
+
+    // Construye el array de invitaciones a enviar
+    const invitaciones = [
+      ...(selectedUsers?.map(u => ({
+        email: u.email,
+        nombre: limpiarNombre(u.displayName || u.label, u.email)
+      })) || []),
+      ...(invitacionesExternas || [])
+    ];
+
+    // Obtén los emails ya invitados en la reserva actual
+    const reserva = reservas.find(r => r.id === reservaId);
+    const emailsYaInvitados = new Set(
+      (reserva?.invitaciones || []).map(inv => inv.email?.toLowerCase())
+    );
+
+    // Filtra los que ya están invitados
+    const yaInvitados = invitaciones.filter(inv => emailsYaInvitados.has(inv.email?.toLowerCase()));
+
+    if (yaInvitados.length > 0) {
+      alert(
+        `Ya has invitado a: ${yaInvitados.map(i => i.nombre || i.email).join(', ')}. No puedes invitar dos veces a la misma persona.`
+      );
+      return;
     }
-  };
+
+    if (invitaciones.length > 3) {
+      alert("Sólo puedes invitar hasta 3 personas por reserva.");
+      return;
+    }
+
+    await invitarJugadores(reservaId, { invitaciones });
+    const [nuevasReservas, nuevosContactos] = await Promise.all([
+      fetchMyReservations({ user: 'me' }),
+      fetchInvitadosFrecuentes()
+    ]);
+    setReservas(nuevasReservas.data);
+    setInvitadosFrecuentes(nuevosContactos.data);
+    setFormStates(prev => ({
+      ...prev,
+      [reservaId]: { selectedUsers: [], invitacionesExternas: [] }
+    }));
+  } catch (error) {
+    console.error("Error invitando jugadores:", error.response?.data);
+    alert("Error al enviar invitaciones: " + (error.response?.data?.error || "Intente nuevamente"));
+  }
+};
+
 
   const handleEliminarInvitacion = async (invitacionId, reservaId) => {
     try {
@@ -450,6 +451,77 @@ export default function MisReservas() {
               const caducada = isReservaCaducada(reserva);
               const total = reserva.invitaciones?.length || 0;
               const aceptadas = reserva.invitaciones?.filter(i => i.estado === 'aceptada').length || 0;
+
+                // BLOQUE DE FILTRADO: ponlo aquí, dentro del map y antes del <Select />
+// Normaliza emails de usuarios internos
+const emailsUsuariosComunidad = usuariosPlanos
+  .map(u => u.email && u.email.trim().toLowerCase())
+  .filter(Boolean);
+
+console.log("usuariosPlanos:", usuariosPlanos);
+console.log("emailsUsuariosComunidad:", emailsUsuariosComunidad);
+
+// Normaliza emails de invitados ya invitados a la reserva
+const emailsInvitados = new Set(
+  (reserva.invitaciones || [])
+    .map(inv => inv.email && inv.email.trim().toLowerCase())
+    .filter(Boolean)
+);
+
+console.log("reserva.invitaciones:", reserva.invitaciones);
+console.log("emailsInvitados:", [...emailsInvitados]);
+
+// Filtra invitados externos frecuentes que NO son usuarios internos
+const invitadosExternosFrecuentes = invitadosFrecuentes.filter(invitado => {
+  const email = invitado.email && invitado.email.trim().toLowerCase();
+  const esExterno = email && !emailsUsuariosComunidad.includes(email);
+  if (!esExterno) {
+    console.log(`Filtrado como interno: ${invitado.email} (${invitado.nombre_invitado})`);
+  }
+  return esExterno;
+});
+
+console.log("invitadosExternosFrecuentes:", invitadosExternosFrecuentes);
+
+// Filtra los que ya han sido invitados a esta reserva
+const invitadosExternosFrecuentesFiltrados = invitadosExternosFrecuentes.filter(invitado => {
+  const email = invitado.email && invitado.email.trim().toLowerCase();
+  const noYaInvitado = email && !emailsInvitados.has(email);
+  if (!noYaInvitado) {
+    console.log(`Ya invitado a esta reserva: ${invitado.email} (${invitado.nombre_invitado})`);
+  }
+  return noYaInvitado;
+});
+
+console.log("invitadosExternosFrecuentesFiltrados:", invitadosExternosFrecuentesFiltrados);
+
+// Filtra y agrupa usuarios internos no invitados aún
+const usuariosPlanosFiltrados = usuariosPlanos.filter(u => {
+  const email = u.email && u.email.trim().toLowerCase();
+  return email && !emailsInvitados.has(email);
+});
+const usuariosAgrupados = agruparUsuariosPorVivienda(usuariosPlanosFiltrados);
+
+console.log("usuariosPlanosFiltrados:", usuariosPlanosFiltrados);
+console.log("usuariosAgrupados:", usuariosAgrupados);
+
+// Opciones para el <Select />
+const opcionesCombinadas = [
+  ...usuariosAgrupados,
+  {
+    label: "Invitados externos frecuentes",
+    options: invitadosExternosFrecuentesFiltrados.map(ie => ({
+      value: ie.email,
+      label: `${ie.nombre_invitado} (${ie.email})`,
+      displayName: `${ie.nombre_invitado} (${ie.email})`,
+      isExterno: true,
+      email: ie.email,
+      nombre: ie.nombre_invitado
+    }))
+  }
+];
+
+console.log("opcionesCombinadas:", opcionesCombinadas);
               return (
                 <div
   key={reserva.id}
@@ -659,7 +731,7 @@ export default function MisReservas() {
                                 </button>
                               </div>
                             ) : (
-                              <div style={{ position: "relative" }}>
+                              <div style={{ position: "relative" }} key={reserva.id}>
                               <Select
                                 isSearchable={false}
                                 inputProps={{ readOnly: true }}

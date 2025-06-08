@@ -84,11 +84,23 @@ export default function Home() {
       .then(data => {
         setNombre(data.nombre);
         setPartidosJugadosMes(data.partidos_jugados_mes);
-        setInvitacionesPendientes(data.invitaciones_pendientes || []);
+        setInvitacionesPendientes(
+            (data.invitaciones_pendientes || []).filter(inv => {
+              // Si la reserva ya no existe, filtra fuera
+              if (!inv.reserva) return false;
+              // Si tienes un campo de estado en la reserva:
+              if (inv.reserva.estado && inv.reserva.estado !== 'activa') return false;
+              // Si la fecha y hora de la reserva ya han pasado:
+              const ts = inv.reserva.timeslot;
+              if (!ts) return false;
+              const fechaHora = new Date(`${inv.reserva.date}T${ts.start_time || '00:00'}`);
+              return fechaHora >= new Date();
+            })
+          );
         setIsStaff(data.is_staff || false); // <-- Añade esta línea
       });
   }, []);
-const [setReloadProxima] = useState(false);
+const [reloadProxima, setReloadProxima] = useState(0);
   // 2. Carga el próximo partido y calcula invitados aceptados
 useEffect(() => {
   async function cargarProximos() {
@@ -129,7 +141,7 @@ useEffect(() => {
     setLoading(false);
   }
   cargarProximos();
-}, []);
+}, [reloadProxima]);
 
 
 
@@ -225,7 +237,7 @@ function aceptarInvitacion(id, token) {
       // Opcional: muestra un mensaje de éxito
       // Refresca las invitaciones pendientes
       recargarDashboard();
-      setReloadProxima(r => !r); // Esto forzará el useEffect de arriba
+      setReloadProxima(prev => prev + 1); // Cambia el valor para forzar recarga
       setShowModal(false);
     });
 }
@@ -243,6 +255,7 @@ function rechazarInvitacion(id, token) {
     .then(data => {
       // Opcional: muestra un mensaje de éxito
       recargarDashboard();
+      setReloadProxima(prev => prev + 1); // Cambia el valor para forzar recarga
       setShowModal(false);
     });
 }

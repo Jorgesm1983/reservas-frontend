@@ -7,8 +7,9 @@ import {
   fetchCourts
 } from '../services/ApiService';
 import { format } from 'date-fns';
-
-const PAGE_SIZE = 20;
+import { es } from 'date-fns/locale';
+import Header from './Header';
+const PAGE_SIZE = 10;
 
 function getMonthDateRange(date = new Date()) {
   const year = date.getFullYear();
@@ -39,6 +40,7 @@ export default function ReservationList() {
   const [courts, setCourts] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  // const userEmail = localStorage.getItem('email');
 
   useEffect(() => {
     const fetchFiltersData = async () => {
@@ -106,7 +108,7 @@ export default function ReservationList() {
     if (window.confirm("¿Seguro que quieres cancelar esta reserva?")) {
       try {
         await deleteReservation(id);
-        setReservations(prev => prev.filter(res => res.id !== id));
+        fetchFilteredReservations(); // <-- Recarga la página actual
       } catch (error) {
         console.error("Error cancelando reserva:", error);
         alert(error.response?.data?.error || "No se pudo cancelar la reserva");
@@ -117,142 +119,265 @@ export default function ReservationList() {
   // Paginación simple
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  return (
-    <div className="container">
-      <h2>Listado de reservas</h2>
-      <div className="row mb-3 align-items-end">
-        <div className="col-md-2">
-          <label>Desde:</label>
-          <input
-            type="date"
-            className="form-control"
-            name="startDate"
-            value={filters.startDate}
-            onChange={handleFilterChange}
-          />
-        </div>
-        <div className="col-md-2">
-          <label>Hasta:</label>
-          <input
-            type="date"
-            className="form-control"
-            name="endDate"
-            value={filters.endDate}
-            onChange={handleFilterChange}
-          />
-        </div>
-        <div className="col-md-2">
-          <label>Horario:</label>
-          <select
-            className="form-select"
-            name="timeslot"
-            value={filters.timeslot}
-            onChange={handleFilterChange}
-          >
-            <option value="">Todos</option>
-            {timeSlots.map(ts => (
-              <option key={ts.id} value={ts.id}>
-                {ts.start_time.slice(0, 5)} - {ts.end_time.slice(0, 5)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="col-md-2">
-          <label>Vivienda:</label>
-          <select
-            className="form-select"
-            name="vivienda"
-            value={filters.vivienda}
-            onChange={handleFilterChange}
-          >
-            <option value="">Todas</option>
-            {viviendas.map(v => (
-              <option key={v.id} value={v.id}>{v.nombre}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+return (
+  <div style={{ background: '#f6f8fa'}}>
+    <Header showHomeIcon={true} showLogout={false} />
+    <div className="container py-3 flex-grow-1" style={{ flex: 1, maxWidth: 480 }}>
+      <div className="card-welcome mb-4" style={{
+        maxWidth: 420,
+        margin: '0 auto',
+        padding: '1.5rem 1.2rem 1.2rem 1.2rem',
+        background: '#fff',
+        boxShadow: "0 4px 20px rgba(31,38,135,0.08)",
+          borderTop: "3px solid #c6ff00"
+      }}>
 
-      <div className="table-responsive">
-        <table className="table table-bordered table-hover">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Hora</th>
-              <th>Pista</th>
-              <th>Nombre y Apellido</th>
-              <th>Vivienda</th>
-              {isStaff && <th>Acciones</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={isStaff ? 6 : 5} className="text-center">
-                  Cargando...
-                </td>
-              </tr>
-            ) : reservations.length === 0 ? (
-              <tr>
-                <td colSpan={isStaff ? 6 : 5} className="text-center">
-                  No hay reservas en este rango
-                </td>
-              </tr>
-            ) : (
-              reservations.map(res => (
-                <tr key={res.id}>
-                  <td>{format(new Date(res.date), 'dd/MM/yyyy')}</td>
-                  <td>
-                    {timeSlots.find(ts => ts.id === (res.timeslot?.id || res.timeslot))?.start_time?.slice(0,5) || '--:--'}
-                    {" - "}
-                    {timeSlots.find(ts => ts.id === (res.timeslot?.id || res.timeslot))?.end_time?.slice(0,5) || '--:--'}
-                  </td>
-                  <td>{courts.find(c => c.id === (res.court?.id || res.court))?.name || 'Sin pista'}</td>
-                  <td>
-                    {res.user?.nombre || ''}{res.user?.apellido ? ' ' + res.user.apellido : ''}
-                  </td>
-                  <td>{res.user?.vivienda?.nombre || 'Sin vivienda'}</td>
-                  {isStaff && (
-                    <td>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() => handleDelete(res.id)}
-                      >
-                        Cancelar
-                      </button>
-                    </td>
-                  )}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+        <div
+            className="card-reserva-header"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              marginBottom: 18
+            }}
+          >
+            <div
+              style={{
+                background: '#c6ff00',
+                borderRadius: '50%',
+                width: 48,
+                height: 48,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 8,
+                boxShadow: '0 2px 8px rgba(198,255,0,0.13)'
+              }}
+            >
+              <i className="bi bi-calendar-check" style={{ color: '#0e2340', fontSize: 26 }}></i>
+            </div>
+            <div
+              style={{
+                fontWeight: 700,
+                fontSize: 20,
+                color: '#0e2340',
+                marginBottom: 2,
+                letterSpacing: 0.2
+              }}
+            >
+              Histórico de reservas
+            </div>
+            <div
+              style={{
+                color: '#7e8594',
+                fontSize: 15,
+                textAlign: 'center',
+                maxWidth: 290,
+                marginTop: 2
+              }}
+            >
+              Consulta, filtra las reservas de pista.
+            </div>
+          </div>
+        
+        {/* Filtros */}
+        <div className="row mb-3 align-items-end">
+          <div className="col-6 mb-2">
+            <label style={{ color: '#7e8594', fontWeight: 500 }}>Desde:</label>
+            <input
+              type="date"
+              className="form-control"
+              name="startDate"
+              value={filters.startDate}
+              onChange={handleFilterChange}
+            />
+          </div>
+          <div className="col-6 mb-2">
+            <label style={{ color: '#7e8594', fontWeight: 500 }}>Hasta:</label>
+            <input
+              type="date"
+              className="form-control"
+              name="endDate"
+              value={filters.endDate}
+              onChange={handleFilterChange}
+            />
+          </div>
+          <div className="col-6 mb-2">
+            <label style={{ color: '#7e8594', fontWeight: 500 }}>Horario:</label>
+            <select
+              className="form-select"
+              name="timeslot"
+              value={filters.timeslot}
+              onChange={handleFilterChange}
+            >
+              <option value="">Todos</option>
+              {timeSlots.map(ts => (
+                <option key={ts.id} value={ts.id}>
+                  {ts.start_time.slice(0, 5)} - {ts.end_time.slice(0, 5)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="col-6 mb-2">
+            <label style={{ color: '#7e8594', fontWeight: 500 }}>Vivienda:</label>
+            <select
+              className="form-select"
+              name="vivienda"
+              value={filters.vivienda}
+              onChange={handleFilterChange}
+            >
+              <option value="">Todas</option>
+              {viviendas.map(v => (
+                <option key={v.id} value={v.id}>{v.nombre}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <nav className="mt-3">
-          <ul className="pagination justify-content-center">
-            <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-              <button className="page-link" onClick={() => setPage(page - 1)} disabled={page === 1}>
-                Anterior
-              </button>
-            </li>
-            {Array.from({ length: totalPages }, (_, idx) => (
-              <li key={idx + 1} className={`page-item ${page === idx + 1 ? 'active' : ''}`}>
-                <button className="page-link" onClick={() => setPage(idx + 1)}>
-                  {idx + 1}
-                </button>
-              </li>
-            ))}
-            <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
-              <button className="page-link" onClick={() => setPage(page + 1)} disabled={page === totalPages}>
-                Siguiente
-              </button>
-            </li>
-          </ul>
-        </nav>
-      )}
+<div>
+  {loading ? (
+    <div className="text-center py-5">
+      <div className="spinner-border text-primary" role="status" />
     </div>
-  );
+  ) : reservations.length === 0 ? (
+    <div className="text-center text-muted py-5">
+      No hay reservas en este rango
+    </div>
+  ) : (
+    reservations.map(res => {
+      const ts = timeSlots.find(ts => ts.id === (res.timeslot?.id || res.timeslot));
+      const pista = courts.find(c => c.id === (res.court?.id || res.court));
+      const resDate = new Date(res.date + 'T' + (ts?.start_time || '00:00'));
+      const now = new Date();
+      const isActive = resDate > now;
+      const user = res.user || {};
+      const userEmail = localStorage.getItem('email');
+
+      return (
+        <div key={res.id}
+          className="d-flex align-items-center border rounded-3 mb-2 px-3 py-2"
+          style={{
+            background: "#f8fafc",
+            borderColor: "#e3e7ed",
+            minHeight: 60
+          }}>
+          
+          {/* Datos principales de la reserva */}
+          <div style={{ flex: 1, minWidth: 0, marginRight: 15 }}>
+            <div className="fw-bold" style={{
+              color: '#0e2340',
+              fontSize: 16,
+              letterSpacing: 0.1,
+              marginBottom: 2
+            }}>
+              {format(new Date(res.date), "EEEE d 'de' MMMM", { locale: es })} · {ts?.start_time?.slice(0,5)}-{ts?.end_time?.slice(0,5)}
+            </div>
+            <div style={{ fontSize: 14, color: '#0e2340', marginBottom: 2 }}>
+              <i className="bi bi-geo-alt-fill me-1" style={{ color: '#0e2340' }} />
+              {pista?.name || 'Sin pista'}
+            </div>
+            <div style={{ fontSize: 13, color: '#7e8594' }}>
+              {user.nombre} {user.apellido} · {user.vivienda?.nombre || 'Sin vivienda'}
+            </div>
+          </div>
+
+          {/* Jugadores confirmados (solo para staff o propietario) */}
+          {(isStaff || res.user?.email === userEmail) && (
+            <div
+              style={{
+                minWidth: 160,
+                maxWidth: 220,
+                textAlign: "right",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-end",
+                justifyContent: "center"
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: 600,
+                  color: "#0e2340",
+                  fontSize: 13,
+                  marginBottom: 4
+                }}
+              >
+                Jugado con:
+              </div>
+              {res.invitaciones && res.invitaciones.filter(inv => inv.estado === "aceptada").length > 0 ? (
+                <div className="d-flex flex-wrap justify-content-end" style={{ gap: 3 }}>
+                  {res.invitaciones
+                    .filter(inv => inv.estado === "aceptada")
+                    .map(inv => (
+                      <span
+                        key={inv.id}
+                        className="badge"
+                        style={{
+                          background: "#f2f6fa",
+                          color: "#0e2340",
+                          fontSize: 11,
+                          fontWeight: 500,
+                          padding: "3px 6px",
+                          borderRadius: "4px",
+                          border: "1px solid #e3e7ed",
+                          marginBottom: 2
+                        }}
+                      >
+                        {inv.nombremostrar || inv.nombre_invitado || inv.nombre || inv.email}
+                      </span>
+                    ))}
+                </div>
+              ) : (
+                <span className="text-muted" style={{ fontSize: 12 }}>
+                  Ningún jugador confirmado
+                </span>
+              )}
+              {/* Botón cancelar solo si staff y activa */}
+              {isStaff && isActive && (
+                <button
+                  className="btn btn-danger btn-sm mt-2"
+                  onClick={() => handleDelete(res.id)}
+                  style={{ minWidth: 70, fontSize: 12 }}
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
+          )}
+
+        </div>
+      );
+    })
+  )}
+</div>
+
+{/* Paginación */}
+{totalPages > 1 && (
+  <nav className="mt-4">
+    <ul className="pagination justify-content-center mb-0">
+      <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
+        <button className="page-link" onClick={() => setPage(page - 1)} disabled={page === 1}>
+          Anterior
+        </button>
+      </li>
+      {Array.from({ length: totalPages }, (_, idx) => (
+        <li key={idx + 1} className={`page-item ${page === idx + 1 ? 'active' : ''}`}>
+          <button className="page-link" onClick={() => setPage(idx + 1)}>
+            {idx + 1}
+          </button>
+        </li>
+      ))}
+      <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
+        <button className="page-link" onClick={() => setPage(page + 1)} disabled={page === totalPages}>
+          Siguiente
+        </button>
+      </li>
+    </ul>
+  </nav>
+)}
+
+      </div>
+    </div>
+  </div>
+);
 }
