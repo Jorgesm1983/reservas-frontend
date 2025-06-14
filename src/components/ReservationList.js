@@ -3,7 +3,7 @@ import {
   fetchReservations,
   fetchTimeSlots,
   fetchViviendas,
-  deleteReservation,
+  // deleteReservation,
   fetchCourts
 } from '../services/ApiService';
 import { format } from 'date-fns';
@@ -104,17 +104,17 @@ export default function ReservationList() {
     setPage(1); // Reset to first page on filter change
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("¿Seguro que quieres cancelar esta reserva?")) {
-      try {
-        await deleteReservation(id);
-        fetchFilteredReservations(); // <-- Recarga la página actual
-      } catch (error) {
-        console.error("Error cancelando reserva:", error);
-        alert(error.response?.data?.error || "No se pudo cancelar la reserva");
-      }
-    }
-  };
+  // const handleDelete = async (id) => {
+  //   if (window.confirm("¿Seguro que quieres cancelar esta reserva?")) {
+  //     try {
+  //       await deleteReservation(id);
+  //       fetchFilteredReservations(); // <-- Recarga la página actual
+  //     } catch (error) {
+  //       console.error("Error cancelando reserva:", error);
+  //       alert(error.response?.data?.error || "No se pudo cancelar la reserva");
+  //     }
+  //   }
+  // };
 
   // Paginación simple
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -247,9 +247,9 @@ return (
     reservations.map(res => {
       const ts = timeSlots.find(ts => ts.id === (res.timeslot?.id || res.timeslot));
       const pista = courts.find(c => c.id === (res.court?.id || res.court));
-      const resDate = new Date(res.date + 'T' + (ts?.start_time || '00:00'));
-      const now = new Date();
-      const isActive = resDate > now;
+      // const resDate = new Date(res.date + 'T' + (ts?.start_time || '00:00'));
+      // const now = new Date();
+      // // const isActive = resDate > now;
       const user = res.user || {};
       const userEmail = localStorage.getItem('email');
 
@@ -281,69 +281,64 @@ return (
             </div>
           </div>
 
-          {/* Jugadores confirmados (solo para staff o propietario) */}
-          {(isStaff || res.user?.email === userEmail) && (
-            <div
-              style={{
-                minWidth: 160,
-                maxWidth: 220,
-                textAlign: "right",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-end",
-                justifyContent: "center"
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: 600,
-                  color: "#0e2340",
-                  fontSize: 13,
-                  marginBottom: 4
-                }}
-              >
-                Jugado con:
-              </div>
-              {res.invitaciones && res.invitaciones.filter(inv => inv.estado === "aceptada").length > 0 ? (
-                <div className="d-flex flex-wrap justify-content-end" style={{ gap: 3 }}>
-                  {res.invitaciones
-                    .filter(inv => inv.estado === "aceptada")
-                    .map(inv => (
-                      <span
-                        key={inv.id}
-                        className="badge"
-                        style={{
-                          background: "#f2f6fa",
-                          color: "#0e2340",
-                          fontSize: 11,
-                          fontWeight: 500,
-                          padding: "3px 6px",
-                          borderRadius: "4px",
-                          border: "1px solid #e3e7ed",
-                          marginBottom: 2
-                        }}
-                      >
-                        {inv.nombremostrar || inv.nombre_invitado || inv.nombre || inv.email}
-                      </span>
-                    ))}
-                </div>
-              ) : (
-                <span className="text-muted" style={{ fontSize: 12 }}>
-                  Ningún jugador confirmado
-                </span>
-              )}
-              {/* Botón cancelar solo si staff y activa */}
-              {isStaff && isActive && (
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={() => handleDelete(res.id)}
-                  style={{ minWidth: 70, fontSize: 12 }}
-                >
-                  Cancelar
-                </button>
-              )}
-            </div>
-          )}
+{/* Jugadores confirmados (solo para staff o propietario) */}
+{(isStaff || res.user?.email === userEmail) && res.invitaciones && res.invitaciones.some(inv => inv.estado === "aceptada") && (
+  <div
+    style={{
+      minWidth: 120,
+      maxWidth: 220,
+      textAlign: "right",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-end",
+      justifyContent: "center"
+    }}
+  >
+    <div
+      style={{
+        fontWeight: 600,
+        color: "#0e2340",
+        fontSize: 13,
+        marginBottom: 4
+      }}
+    >
+      Jugado con:
+    </div>
+    <div className="d-flex flex-wrap justify-content-end" style={{ gap: 3 }}>
+      {res.invitaciones
+        .filter(inv => inv.estado === "aceptada")
+        .map(inv => (
+          <span
+            key={inv.id}
+            className="badge"
+            style={{
+              background: "#f2f6fa",
+              color: "#0e2340",
+              fontSize: 11,
+              fontWeight: 500,
+              padding: "3px 6px",
+              borderRadius: "4px",
+              border: "1px solid #e3e7ed",
+              marginBottom: 2
+            }}
+          >
+            {inv.nombremostrar || inv.nombre_invitado || inv.nombre || inv.email}
+          </span>
+        ))}
+    </div>
+    {/* Botón cancelar solo si staff y activa */}
+    {/* {isStaff && isActive && (
+      <button
+        className="btn btn-danger btn-sm mt-2"
+        onClick={() => handleDelete(res.id)}
+        style={{ minWidth: 70, fontSize: 12 }}
+      >
+        Cancelar
+      </button>
+    )} */}
+  </div>
+)}
+
 
         </div>
       );

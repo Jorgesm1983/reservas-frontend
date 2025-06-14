@@ -52,7 +52,13 @@ export default function ReservationForm() {
   }, []);
 
   useEffect(() => {
-    fetchCourts().then(res => setCourts(res.data));
+    fetchCourts().then(res => {
+      setCourts(res.data);
+      // Si solo hay una pista, selecciónala automáticamente
+      if (res.data.length === 1) {
+        setSelectedCourt(String(res.data[0].id));
+      }
+    });
     fetchTimeSlots().then(res => setSlots(res.data));
   }, []);
 
@@ -229,6 +235,7 @@ export default function ReservationForm() {
                 value={selectedCourt}
                 onChange={e => setSelectedCourt(e.target.value)}
                 required
+                disabled={courts.length === 1} // Deshabilita si solo hay una pista
               >
                 <option value="">Selecciona pista</option>
                 {courts.map(court => (
@@ -273,7 +280,7 @@ export default function ReservationForm() {
               type="submit"
               disabled={isSubmitting}
               style={{ marginTop: 12 }}
-            >
+            ><i className="bi bi-calendar-plus">   </i>
               {isSubmitting ? 'Reservando...' : 'Reservar'}
             </button>
           </form>

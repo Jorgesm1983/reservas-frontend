@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchComunidades, createComunidad, updateComunidad, deleteComunidad } from '../services/ApiService';
+import Header from '../components/Header';
 
 export default function AdminComunidades() {
   const [comunidades, setComunidades] = useState([]);
@@ -47,44 +48,129 @@ export default function AdminComunidades() {
   if (loading) return <p>Cargando comunidades...</p>;
 
   return (
-    <div className="container mt-4">
-      <h3>Comunidades</h3>
-      <button className="btn btn-success mb-2" onClick={() => handleOpenModal('add')}>Nueva comunidad</button>
-      <table className="table table-striped">
-        <thead>
-          <tr><th>Nombre</th><th>Acciones</th></tr>
-        </thead>
-        <tbody>
-          {comunidades.map(c => (
-            <tr key={c.id}>
-              <td>{c.name}</td>
-              <td>
-                <button className="btn btn-primary btn-sm me-2" onClick={() => handleOpenModal('edit', c)}>Editar</button>
-                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(c.id)}>Eliminar</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {modal.open && (
-        <div className="modal show d-block" tabIndex="-1" style={{ background: '#0003' }}>
-          <div className="modal-dialog">
-            <form className="modal-content" onSubmit={handleSubmit}>
-              <div className="modal-header">
-                <h5 className="modal-title">{modal.mode === 'add' ? 'Nueva comunidad' : 'Editar comunidad'}</h5>
-                <button type="button" className="btn-close" onClick={handleCloseModal}></button>
-              </div>
-              <div className="modal-body">
-                <input className="form-control mb-2" name="name" value={form.name} onChange={handleChange} placeholder="Nombre" required />
-              </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" type="button" onClick={handleCloseModal}>Cancelar</button>
-                <button className="btn btn-primary" type="submit">Guardar</button>
-              </div>
-            </form>
+  <div style={{ background: '#f6f8fa'}}>
+    <Header showHomeIcon={true} showLogout={false} adminHomeIcon={true}/>
+    <div className="container py-4 flex-grow-1 d-flex justify-content-center align-items-start" style={{ minHeight: '80vh' }}>
+      <div
+        className="card shadow-sm rounded-4"
+        style={{
+          maxWidth: 600,
+          width: '100%',
+          margin: '0 auto',
+          padding: '2rem 1.5rem 1.5rem 1.5rem',
+          borderTop: '3px solid #c6ff00'
+        }}
+      >
+        <div className="mb-4 text-center">
+          <div
+            style={{
+              background: '#c6ff00',
+              borderRadius: 50,
+              width: 48,
+              height: 48,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 8px auto',
+              boxShadow: '0 2px 8px rgba(198,255,0,0.13)'
+            }}
+          >
+            <i className="bi bi-building" style={{ color: '#0e2340', fontSize: 26 }} />
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 20, color: '#0e2340', marginBottom: 2 }}>
+            Comunidades
+          </div>
+          <div style={{ color: '#7e8594', fontSize: 15 }}>
+            Gestiona las comunidades registradas en el sistema.
           </div>
         </div>
-      )}
+        <button className="btn btn-success w-100 mb-3" onClick={() => handleOpenModal('add')}>
+          <i className="bi bi-plus-circle me-2"></i>Nueva comunidad
+        </button>
+        <div className="table-responsive">
+          <table className="table table-striped table-sm align-middle">
+            <thead>
+              <tr>
+                <th style={{ minWidth: 140 }}>Nombre</th>
+                <th style={{ minWidth: 110 }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comunidades.map(c => (
+                <tr key={c.id}>
+                  <td className="text-break" style={{ verticalAlign: 'middle' }}>{c.name}</td>
+                  <td>
+                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                      <button
+                        className="btn btn-info btn-sm"
+                        onClick={() => handleOpenModal('edit', c)}
+                        title="Editar"
+                      >
+                        <i className="bi bi-pencil"></i>
+                      </button>
+                      <button
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => handleDelete(c.id)}
+                        title="Eliminar"
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {modal.open && (
+          <div className="modal show d-block" tabIndex="-1" style={{ background: '#0003' }}>
+            <div className="modal-dialog">
+              <form className="modal-content" onSubmit={handleSubmit}>
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    {modal.mode === 'add' ? (
+                      <>
+                        <i className="bi bi-plus-circle me-2"></i>Nueva comunidad
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-pencil me-2"></i>Editar comunidad
+                      </>
+                    )}
+                  </h5>
+                  <button type="button" className="btn-close" onClick={handleCloseModal}></button>
+                </div>
+                <div className="modal-body">
+                  <input
+                    className="form-control mb-2"
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    placeholder="Nombre"
+                    required
+                  />
+                </div>
+                <div className="modal-footer">
+                  <button
+                    className="btn btn-outline-secondary btn-sm"
+                    type="button"
+                    onClick={handleCloseModal}
+                  >
+                    <i className="bi bi-x-circle me-1"></i>Cancelar
+                  </button>
+                  <button
+                    className="btn btn-outline-success btn-sm"
+                    type="submit"
+                  >
+                    <i className="bi bi-save me-1"></i>Guardar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  );
+  </div>
+);
 }

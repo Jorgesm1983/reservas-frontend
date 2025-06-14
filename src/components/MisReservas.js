@@ -11,6 +11,7 @@ import {
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import Header from './Header';
 
+
 const ESTADOS_COLORES = {
   pendiente: 'bg-warning',
   aceptada: 'bg-success',
@@ -22,6 +23,8 @@ const FILTERS = {
   INACTIVAS: 'inactivas',
   TODAS: 'todas'
 };
+
+
 
 const Group = props => {
   const { label, options } = props.data;
@@ -239,10 +242,14 @@ export default function MisReservas() {
       return;
     }
 
-    if (invitaciones.length > 3) {
-      alert("Sólo puedes invitar hasta 3 personas por reserva.");
-      return;
-    }
+   const invitacionesValidas = invitaciones.filter(
+  inv => inv.estado === "pendiente" || inv.estado === "aceptada"
+);
+
+if (invitacionesValidas.length >= 3) {
+  alert("Sólo puedes invitar hasta 3 personas por reserva.");
+  return;
+}
 
     await invitarJugadores(reservaId, { invitaciones });
     const [nuevasReservas, nuevosContactos] = await Promise.all([
@@ -839,7 +846,7 @@ console.log("opcionesCombinadas:", opcionesCombinadas);
                                 ((formStates[reserva.id]?.selectedUsers?.length || 0) +
                                   (formStates[reserva.id]?.invitacionesExternas?.length || 0)) > 3
                               }
-                            >
+                            ><i className="bi bi-person-plus"> </i>
                               Invitar (
                               {(formStates[reserva.id]?.selectedUsers?.length || 0) +
                                 (formStates[reserva.id]?.invitacionesExternas?.length || 0)}

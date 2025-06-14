@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Header from '../components/Header';
 import {
   fetchUsers,
   createUser,
@@ -28,7 +29,6 @@ export default function AdminUsuarios() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
 
-  // Cargar datos al montar el componente
   useEffect(() => {
     setLoading(true);
     fetchUsers().then(res => {
@@ -46,7 +46,6 @@ export default function AdminUsuarios() {
     });
   }, []);
 
-  // Abrir modal de alta o edición
   const handleOpenModal = (mode, user = null) => {
     setModal({ open: true, mode, user });
     setForm(user ? {
@@ -68,7 +67,6 @@ export default function AdminUsuarios() {
 
   const handleCloseModal = () => setModal({ open: false, mode: 'add', user: null });
 
-  // Actualizar formulario
   const handleChange = e => {
     const { name, value, type, checked } = e.target;
     setForm(f => ({
@@ -77,7 +75,6 @@ export default function AdminUsuarios() {
     }));
   };
 
-  // Guardar alta o edición
   const handleSubmit = async e => {
     e.preventDefault();
     const payload = {
@@ -98,7 +95,6 @@ export default function AdminUsuarios() {
     handleCloseModal();
   };
 
-  // Eliminar registro
   const handleDelete = async id => {
     if (window.confirm('¿Seguro que quieres eliminar este usuario?')) {
       await deleteUser(id);
@@ -106,7 +102,6 @@ export default function AdminUsuarios() {
     }
   };
 
-  // Cambiar contraseña
   const handleChangePassword = async (userId) => {
     if (!newPassword) return;
     await changeUserPassword(userId, { new_password: newPassword });
@@ -115,146 +110,257 @@ export default function AdminUsuarios() {
     alert('Contraseña actualizada');
   };
 
-  if (loading) return <p>Cargando usuarios...</p>;
+  if (loading) return <p className="text-center mt-5">Cargando usuarios...</p>;
 
-  return (
-    <div className="container mt-4">
-      <h3>Usuarios</h3>
-      <button className="btn btn-success mb-2" onClick={() => handleOpenModal('add')}>Nuevo usuario</button>
-      <table className="table table-striped">
-        <thead>
-          <tr>
-            <th>Nombre completo</th>
-            <th>Email</th>
-            <th>Vivienda</th>
-            <th>Comunidad</th>
-            <th>Staff</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usuarios.map(u => (
-            <tr key={u.id}>
-              <td>{u.nombre} {u.apellido}</td>
-              <td>{u.email}</td>
-              <td>{u.vivienda?.nombre || '-'}</td>
-              <td>{u.community?.name || '-'}</td>
-              <td>{u.is_staff ? 'Sí' : 'No'}</td>
-              <td>
-                <button className="btn btn-primary btn-sm me-2" onClick={() => handleOpenModal('edit', u)}>Editar</button>
-                <button className="btn btn-danger btn-sm me-2" onClick={() => handleDelete(u.id)}>Eliminar</button>
-                <button className="btn btn-warning btn-sm" onClick={() => { setModal({ ...modal, user: u }); setShowPasswordModal(true); }}>Cambiar contraseña</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
 
-      {modal.open && (
-        <div className="modal show d-block" tabIndex="-1" style={{ background: '#0003' }}>
-          <div className="modal-dialog">
-            <form className="modal-content" onSubmit={handleSubmit}>
-              <div className="modal-header">
-                <h5 className="modal-title">{modal.mode === 'add' ? 'Nuevo usuario' : 'Editar usuario'}</h5>
-                <button type="button" className="btn-close" onClick={handleCloseModal}></button>
-              </div>
-              <div className="modal-body">
-                <input
-                  className="form-control mb-2"
-                  name="nombre"
-                  value={form.nombre}
-                  onChange={handleChange}
-                  placeholder="Nombre"
-                  required
-                />
-                <input
-                  className="form-control mb-2"
-                  name="apellido"
-                  value={form.apellido}
-                  onChange={handleChange}
-                  placeholder="Apellido"
-                />
-                <input
-                  className="form-control mb-2"
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="Email"
-                  type="email"
-                  required
-                />
-                <select
-                  className="form-select mb-2"
-                  name="vivienda"
-                  value={form.vivienda}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Selecciona vivienda</option>
-                  {viviendas.map(v => (
-                    <option key={v.id} value={v.id}>{v.nombre}</option>
-                  ))}
-                </select>
-                <select
-                  className="form-select mb-2"
-                  name="comunidad"
-                  value={form.comunidad}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Selecciona comunidad</option>
-                  {comunidades.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-                <div className="form-check mb-2">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    name="is_staff"
-                    checked={form.is_staff}
-                    onChange={handleChange}
-                    id="staffCheck"
-                  />
-                  <label className="form-check-label" htmlFor="staffCheck">Staff</label>
+return (
+  <div style={{ background: '#f6f8fa' }}>
+    <Header adminHomeIcon={true} showLogout={false} />
+    <div className="container py-4 flex-grow-1 d-flex justify-content-center align-items-start" style={{ minHeight: '80vh' }}>
+      <div
+        className="card shadow-sm rounded-4"
+        style={{
+          maxWidth: 900,
+          width: '100%',
+          margin: '0 auto',
+          padding: '2rem 1.5rem 1.5rem 1.5rem',
+          borderTop: '3px solid #c6ff00'
+        }}
+      >
+        <div className="mb-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div
+            style={{
+              background: '#c6ff00',
+              borderRadius: 50,
+              width: 48,
+              height: 48,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 8,
+              boxShadow: '0 2px 8px rgba(198,255,0,0.13)'
+            }}
+          >
+            <i className="bi bi-people" style={{ color: '#0e2340', fontSize: 26 }} />
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 20, color: '#0e2340', marginBottom: 2, letterSpacing: 0.2 }}>
+            Usuarios
+          </div>
+          <div style={{ color: '#7e8594', fontSize: 15, textAlign: 'center', maxWidth: 450, marginTop: 2 }}>
+            Gestiona los usuarios registrados, sus roles y asignaciones.
+          </div>
+        </div>
+        <button className="btn btn-success w-100 mb-3" onClick={() => handleOpenModal('add')}>
+          <i className="bi bi-person-plus me-2"></i>Nuevo usuario
+        </button>
+        <div className="table-responsive">
+          <table className="table table-striped table-sm align-middle">
+            <thead>
+              <tr>
+                <th style={{ minWidth: 120 }}>Nombre completo</th>
+                <th style={{ minWidth: 180 }}>Email</th>
+                <th style={{ minWidth: 120 }}>Vivienda</th>
+                <th style={{ minWidth: 120 }}>Comunidad</th>
+                <th style={{ minWidth: 60 }}>Staff</th>
+                <th style={{ minWidth: 130 }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {usuarios.map(u => (
+                <tr key={u.id}>
+                  <td className="text-break" style={{ verticalAlign: 'middle', maxWidth: 120 }}>
+                    {u.nombre} {u.apellido}
+                  </td>
+                  <td className="text-break" style={{ verticalAlign: 'middle', maxWidth: 180 }}>
+                    {u.email}
+                  </td>
+                  <td className="text-break" style={{ verticalAlign: 'middle', maxWidth: 120 }}>
+                    {u.vivienda?.nombre || '-'}
+                  </td>
+                  <td className="text-break" style={{ verticalAlign: 'middle', maxWidth: 120 }}>
+                    {u.community?.name || '-'}
+                  </td>
+                  <td style={{ verticalAlign: 'middle' }}>
+                    {u.is_staff ? 'Sí' : 'No'}
+                  </td>
+                  <td>
+                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        className="btn btn-info btn-sm"
+                        onClick={() => handleOpenModal('edit', u)}
+                        title="Editar"
+                      >
+                        <i className="bi bi-pencil"></i>
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => handleDelete(u.id)}
+                        title="Eliminar"
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-warning btn-sm"
+                        onClick={() => { setModal({ ...modal, user: u }); setShowPasswordModal(true); }}
+                        title="Cambiar contraseña"
+                      >
+                        <i className="bi bi-key text-dark"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Modal alta/edición */}
+        {modal.open && (
+          <div className="modal show d-block" tabIndex="-1" style={{ background: '#0003' }}>
+            <div className="modal-dialog">
+              <form className="modal-content" onSubmit={handleSubmit}>
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    {modal.mode === 'add' ? (
+                      <>
+                        <i className="bi bi-person-plus me-2"></i>Nuevo usuario
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-pencil me-2"></i>Editar usuario
+                      </>
+                    )}
+                  </h5>
+                  <button type="button" className="btn-close" onClick={handleCloseModal}></button>
                 </div>
-              </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" type="button" onClick={handleCloseModal}>Cancelar</button>
-                <button className="btn btn-primary" type="submit">Guardar</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                <div className="modal-body">
+                  <input
+                    className="form-control mb-2"
+                    name="nombre"
+                    value={form.nombre}
+                    onChange={handleChange}
+                    placeholder="Nombre"
+                    required
+                  />
+                  <input
+                    className="form-control mb-2"
+                    name="apellido"
+                    value={form.apellido}
+                    onChange={handleChange}
+                    placeholder="Apellido"
+                  />
+                  <input
+                    className="form-control mb-2"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    placeholder="Email"
+                    type="email"
+                    required
+                  />
+                  <select
+                    className="form-control mb-2"
+                    name="vivienda"
+                    value={form.vivienda}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Selecciona vivienda</option>
+                    {viviendas.map(v => (
+                      <option key={v.id} value={v.id}>{v.nombre}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="form-control mb-2"
+                    name="comunidad"
+                    value={form.comunidad}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Selecciona comunidad</option>
+                    {comunidades.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <div className="form-check mb-2">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      name="is_staff"
+                      checked={form.is_staff}
+                      onChange={handleChange}
+                      id="staffCheck"
+                    />
+                    <label className="form-check-label" htmlFor="staffCheck">Staff</label>
+                  </div>
+                </div>
+<div className="modal-footer">
+  <button
+    className="btn btn-outline-secondary btn-sm"
+    type="button"
+    onClick={handleCloseModal}
+  >
+    <i className="bi bi-x-circle me-1"></i> Cancelar
+  </button>
+  <button
+    className="btn btn-outline-success btn-sm"
+    type="submit"
+  >
+    <i className="bi bi-check-circle me-1"></i> Guardar
+  </button>
+</div>
 
-      {/* Modal para cambio de contraseña */}
-      {showPasswordModal && modal.user && (
-        <div className="modal show d-block" tabIndex="-1" style={{ background: '#0003' }}>
-          <div className="modal-dialog">
-            <form className="modal-content" onSubmit={e => { e.preventDefault(); handleChangePassword(modal.user.id); }}>
-              <div className="modal-header">
-                <h5 className="modal-title">Cambiar contraseña para {modal.user.nombre} {modal.user.apellido}</h5>
-                <button type="button" className="btn-close" onClick={() => setShowPasswordModal(false)}></button>
-              </div>
-              <div className="modal-body">
-                <input
-                  type="password"
-                  className="form-control"
-                  placeholder="Nueva contraseña"
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" type="button" onClick={() => setShowPasswordModal(false)}>Cancelar</button>
-                <button className="btn btn-primary" type="submit">Guardar</button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Modal para cambio de contraseña */}
+        {showPasswordModal && modal.user && (
+          <div className="modal show d-block" tabIndex="-1" style={{ background: '#0003' }}>
+            <div className="modal-dialog">
+              <form className="modal-content" onSubmit={e => { e.preventDefault(); handleChangePassword(modal.user.id); }}>
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    <i className="bi bi-key me-2"></i>
+                    Cambiar contraseña para {modal.user.nombre} {modal.user.apellido}
+                  </h5>
+                  <button type="button" className="btn-close" onClick={() => setShowPasswordModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="Nueva contraseña"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    required
+                  />
+                </div>
+<div className="modal-footer">
+  <button
+    className="btn btn-outline-secondary btn-sm"
+    type="button"
+    onClick={() => setShowPasswordModal(false)}
+  >
+    <i className="bi bi-x-circle me-1"></i> Cancelar
+  </button>
+  <button
+    className="btn btn-outline-success btn-sm"
+    type="submit"
+  >
+    <i className="bi bi-key me-1"></i> Guardar
+  </button>
+</div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  );
+  </div>
+);
 }

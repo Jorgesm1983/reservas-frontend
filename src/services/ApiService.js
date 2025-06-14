@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://192.168.1.36:8000/api/',  // ← /api/ es crítico
+  baseURL: 'http://192.168.1.37:8000/api/',  // ← /api/ es crítico
   withCredentials: true,
   headers: {
     'X-Requested-With': 'XMLHttpRequest',
@@ -25,17 +25,6 @@ API.interceptors.request.use(config => {
   return config;
 });
 
-API.interceptors.response.use(
-  response => response,
-  async error => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('access');
-      localStorage.removeItem('refresh');
-      window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
-    }
-    return Promise.reject(error);
-  }
-);
 
 // Endpoints
 export const fetchCourts = () => API.get('courts/');
@@ -77,11 +66,11 @@ export const createInvitacion = (data) => API.post('invitaciones/', data);
 export const updateInvitacion = (id, data) => API.put(`invitaciones/${id}/`, data);
 export const deleteInvitacion = (id) => API.delete(`invitaciones/${id}/`);
 
-export const fetchInvitadosExternos = () => API.get('invitaciones-frecuentes/');
-export const createInvitadoExterno = (data) => API.post('invitaciones-frecuentes/', data);
-export const updateInvitadoExterno = (id, data) => API.put(`invitaciones-frecuentes/${id}/`, data);
-export const deleteInvitadoExterno = (id) => API.delete(`invitaciones-frecuentes/${id}/`);
-export const deleteInvitadoExternoByEmail = (email) => API.delete(`invitados-externos/${email}/`);
+export const fetchInvitadosExternos = () => API.get('invitados-externos/');
+export const createInvitadoExterno = (data) => API.post('invitados-externos/', data);
+export const updateInvitadoExterno = (email, data) => API.put(`invitados-externos/${encodeURIComponent(email)}/`, data);
+export const deleteInvitadoExterno = (id) => API.delete(`invitados-frecuentes/${id}/`);
+export const deleteInvitadoExternoByEmail = (email) => API.delete(`invitados-externos/${encodeURIComponent(email)}/`);
 
 export const fetchComunidades = () => API.get('comunidades/');
 export const createComunidad = (data) => API.post('comunidades/', data);
@@ -115,4 +104,6 @@ API.interceptors.request.use(config => {
   }
   return config;
 });
+
+export { API };
 

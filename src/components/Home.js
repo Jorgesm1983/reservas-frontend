@@ -4,6 +4,7 @@ import { Tooltip } from 'flowbite-react';
 import Header from './Header';
 import { fetchMyReservations } from '../services/ApiService';
 
+
 // Función para obtener iniciales
 function getInitials(nombre, email) {
   if (nombre && nombre.trim()) {
@@ -529,23 +530,26 @@ if (loading) {
 
         {/* Botones principales */}
         <div className="row g-3 mb-4">
-          <div className="col-6">
-            <Link to="/reservar" className="btn btn-lg w-100 rounded-4 shadow-sm py-3"
-              style={{ background: '#0e2340', color: '#fff', border: 'none' }}>
-              Reservar Pista
-            </Link>
+          <div className="col-12 col-md-6">
+            <Link to="/reservar" className="btn btn-lg w-100 rounded-4 shadow-sm py-3 d-flex align-items-center justify-content-center gap-2"
+      style={{ background: '#0e2340', color: '#fff', border: 'none' }}>
+      <i className="bi bi-calendar-plus" style={{ fontSize: 22 }}></i>
+      Reservar Pista
+    </Link>
           </div>
-          <div className="col-6">
-            <Link to="/mis-reservas" className="btn btn-lg w-100 rounded-4 shadow-sm py-3"
-              style={{ background: '#0e2340', color: '#fff', border: 'none' }}>
-              Mis Reservas
-            </Link>
+          <div className="col-12 col-md-6">
+            <Link to="/mis-reservas" className="btn btn-lg w-100 rounded-4 shadow-sm py-3 d-flex align-items-center justify-content-center gap-2"
+      style={{ background: '#0e2340', color: '#fff', border: 'none' }}>
+      <i className="bi bi-calendar-check" style={{ fontSize: 22 }}></i>
+      Mis Reservas
+    </Link>
           </div>
           <div className="col-12">
-            <Link to="/list" className="btn btn-lg w-100 rounded-4 shadow-sm py-3"
-              style={{ background: '#fff', color: '#0e2340', border: '2px solid #0e2340' }}>
-              Histórico de Reservas
-            </Link>
+            <Link to="/list" className="btn btn-lg w-100 rounded-4 shadow-sm py-3 d-flex align-items-center justify-content-center gap-2"
+      style={{ background: '#fff', color: '#0e2340', border: '2px solid #0e2340' }}>
+      <i className="bi bi-clock-history" style={{ fontSize: 22 }}></i>
+      Histórico de Reservas
+    </Link>
           </div>
         </div>
 

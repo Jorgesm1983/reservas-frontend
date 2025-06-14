@@ -578,7 +578,7 @@ header {
 
 /* Elimina outline azul feo pero deja focus visible */
 .btn-toggle-tab:focus-visible {
-  outline: 2px solid #c6ff00;
+  outline: 2px solid #c6ff00 !important;
 }
 
 .react-select__option--group-user {
@@ -587,34 +587,34 @@ header {
 
 
 .btn-toggle-tab {
-  background: #fff;
-  color: #0e2340;
-  border: 2px solid #c6ff00;
-  border-radius: 0;
-  font-weight: 700;
-  font-size: 16px;
-  transition: background 0.18s, color 0.18s, border-color 0.18s;
-  box-shadow: none;
-  padding: 10px 0;
-  min-width: 0;
-  outline: none;
+  background: #fff !important; 
+  color: #0e2340 !important;
+  border: 2px solid #c6ff00 !important; 
+  border-radius: 0 !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  transition: background 0.18s, color 0.18s, border-color 0.18s !important; 
+  box-shadow: none !important;
+  padding: 10px 0 !important;
+  min-width: 0 !important;
+  outline: none !important;
 }
 .btn-toggle-tab.active,
 .btn-toggle-tab:focus,
 .btn-toggle-tab:active {
-  background: #0e2340;
-  color: #fff;
-  border-color: #0e2340;
-  outline: none;
+  background: #0e2340 !important;
+  color: #fff !important;
+  border-color: #0e2340 !important;
+  outline: none !important;
 }
 .btn-toggle-tab:first-child {
-  border-radius: 12px 0 0 12px;
+  border-radius: 12px 0 0 12px !important;
 }
 .btn-toggle-tab:last-child {
-  border-radius: 0 12px 12px 0;
+  border-radius: 0 12px 12px 0 !important;
 }
 .btn-toggle-tab:not(:last-child) {
-  border-right: none;
+  border-right: none !important;
 }
 
 @media (max-width: 600px) {
@@ -623,8 +623,8 @@ header {
     padding-right: 0.8rem !important;
   }
   .btn-toggle-tab {
-    font-size: 1rem;
-    padding: 12px 0;
+    font-size: 1rem !important;
+    padding: 12px 0 !important;
   }
   .btn, .form-control {
     font-size: 1rem;
@@ -721,4 +721,10 @@ header {
   box-shadow: 0 0 0 2px #0070B8;
   outline: none;
 } */
+
+.Toastify__toast-container--top-center {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
 

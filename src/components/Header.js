@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-export default function Header({ showHomeIcon = false, showLogout = false }) {
+export default function Header({ showHomeIcon = false, showLogout = false, adminHomeIcon = false}) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -12,6 +12,7 @@ export default function Header({ showHomeIcon = false, showLogout = false }) {
 
   // Solo muestra el icono de home si no estamos en la home
   const showHome = showHomeIcon && location.pathname !== '/';
+  const showAdminHome = adminHomeIcon && location.pathname !== '/admin';
 
   return (
     <header
@@ -47,6 +48,25 @@ export default function Header({ showHomeIcon = false, showLogout = false }) {
             type="button"
           >
             <i className="bi bi-house-door"></i>
+          </button>
+        )}
+          {showAdminHome && (
+          <button
+            className="btn btn-link"
+            style={{
+              color: '#0e2340',
+              fontSize: 22,
+              background: 'none',
+              border: 'none',
+              lineHeight: 1,
+              minWidth: 0,
+              boxShadow: 'none'
+            }}
+            onClick={() => navigate('/admin')}
+            aria-label="Ir al panel de administración"
+            type="button"
+          >
+            <i className="bi bi-speedometer2"></i>
           </button>
         )}
         {showLogout && (

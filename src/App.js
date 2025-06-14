@@ -1,8 +1,10 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation} from 'react-router-dom';
+import ResponseInterceptor from "./services/ResponseInterceptor";
 
 // import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+
 
 import ReservationForm from './components/ReservationForm';
 import LoginPage from './components/LoginPage';
@@ -10,6 +12,8 @@ import ReservationList from './components/ReservationList';
 import RegistroUsuario from './components/RegistroUsuario';
 import MisReservas from './components/MisReservas';
 import RecuperarPassword from './components/RecuperarPassword';
+import AceptarInvitacionPage from './components/AceptarInvitacionPage';
+import RechazarInvitacionPage from './components/RechazarInvitacionPage'; 
 
 import RequireStaff from './services/RequireStaff';
 
@@ -23,10 +27,13 @@ import AdminInvitaciones from './admin/AdminInvitaciones';
 import AdminInvitadosExternos from './admin/AdminInvitadosExternos';
 import AdminComunidades from './admin/AdminComunidades';
 
-import Home from './components/Home';
+
+import Home from './components/Home'
+
 
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './App.css';
+import './App.css'
+// import './App.css';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('access');
@@ -37,6 +44,8 @@ function AppLayout() {
   const location = useLocation();
   const fondoAzul = ['/login', '/registro', '/recuperar-password'].includes(location.pathname);
 
+
+
   return (
     <div className="app-root d-flex flex-column" style={{ minHeight: '100vh', background: '#f6f8fa' }}>
       {!fondoAzul}
@@ -46,6 +55,7 @@ function AppLayout() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/registro" element={<RegistroUsuario />} />
           <Route path="/recuperar-password" element={<RecuperarPassword />} />
+
 
           <Route path="/list" element={
             <PrivateRoute>
@@ -74,6 +84,8 @@ function AppLayout() {
           <Route path="/admin/invitados-externos" element={<RequireStaff><AdminInvitadosExternos /></RequireStaff>} />
           <Route path="/admin/comunidades" element={<RequireStaff><AdminComunidades /></RequireStaff>} />
           <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
+          <Route path="/invitaciones/:token/aceptar" element={<AceptarInvitacionPage />} />
+          <Route path="/invitaciones/:token/rechazar" element={<RechazarInvitacionPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -87,6 +99,7 @@ function AppLayout() {
 function App() {
   return (
     <Router>
+      <ResponseInterceptor />
       <AppLayout />
     </Router>
   );
