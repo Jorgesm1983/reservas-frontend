@@ -154,12 +154,12 @@ useEffect(() => {
   }
 
     useEffect(() => {
-  if (proxima && proxima.court && proxima.court.direccion && proxima.date && proxima.timeslot?.start_time) {
+  if (proxima && proxima.court && proxima.court.comunidad_direccion && proxima.date && proxima.timeslot?.start_time) {
     // 1. Extrae la localidad de la dirección de la pista
     function quitarTildes(str) {
       return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
-    let direccion = proxima.court.direccion;
+    let direccion = proxima.court.direccion || proxima.court.comunidad_direccion;
     let localidad = quitarTildes(
       direccion.includes('-') ? direccion.split('-').pop().trim() : direccion.trim()
     );
@@ -470,7 +470,7 @@ if (loading) {
               {formateaFecha(proximosPartidos[indiceProximo].date)} | {proximosPartidos[indiceProximo].timeslot?.start_time.slice(0, 5)} - {proximosPartidos[indiceProximo].timeslot?.end_time.slice(0, 5)}
             </div>
             <div className="mb-2" style={{ fontSize: '0.97rem' }}>
-              {proximosPartidos[indiceProximo].court?.direccion || ''} · {proximosPartidos[indiceProximo].court?.name || ''}
+              {proximosPartidos[indiceProximo].court?.comunidad_direccion || ''} · {proximosPartidos[indiceProximo].court?.name || ''}
             </div>
             <div className="d-flex justify-content-center align-items-center flex-wrap mt-2" style={{ width: '100%' }}>
   {/* Avatar del organizador */}

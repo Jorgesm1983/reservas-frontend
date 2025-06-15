@@ -1,9 +1,14 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import CommunitySelector from './CommunitySelector';
+import { useCommunity } from '../context/CommunityContext';
 
-export default function Header({ showHomeIcon = false, showLogout = false, adminHomeIcon = false}) {
+
+export default function Header({ showHomeIcon = false, showLogout = false, adminHomeIcon = false, isStaff = false }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { selectedCommunity, setSelectedCommunity } = useCommunity();
+
 
   const handleLogout = () => {
     localStorage.clear();
@@ -31,6 +36,12 @@ export default function Header({ showHomeIcon = false, showLogout = false, admin
         PistaReserva <span style={{ color: '#c6ff00', fontSize: 18 }}>●</span>
       </span>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {isStaff && (
+          <CommunitySelector
+            selectedCommunity={selectedCommunity}
+            setSelectedCommunity={setSelectedCommunity}
+          />
+        )}
         {showHome && (
           <button
             className="btn btn-link"

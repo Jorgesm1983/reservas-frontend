@@ -1,49 +1,78 @@
 import React, { useEffect, useState } from 'react';
-import { fetchTimeSlots, createTimeSlot, updateTimeSlot, deleteTimeSlot } from '../services/ApiService';
+import { fetchTimeSlots, createTimeSlot, updateTimeSlot, deleteTimeSlot, fetchComunidades } from '../services/ApiService';
 import Header from '../components/Header';
+import { useCommunity } from '../context/CommunityContext';
 
 
 export default function AdminTurnos() {
   const [turnos, setTurnos] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: 'add', turno: null });
-  const [form, setForm] = useState({ slot: '', start_time: '', end_time: '' });
+  const [form, setForm] = useState({ slot: '', start_time: '', end_time: '', community: '' });
   const [loading, setLoading] = useState(true);
+  
+  const { selectedCommunity } = useCommunity();
+  const [comunidades, setComunidades] = useState([selectedCommunity]);
   
 
   useEffect(() => {
+  fetchComunidades().then(res => setComunidades(res.data.results || res.data))
+  // fetchTimeSlots().then(res => setTurnos(res.data.results || res.data));
+}, []); 
+
+
+  useEffect(() => {
     setLoading(true);
-    fetchTimeSlots().then(res => {
+    fetchTimeSlots(selectedCommunity).then(res => {
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setTurnos(data);
       setLoading(false);
     });
-  }, []);
+  }, [selectedCommunity]);
+
+  const defaultCommunityId =
+  selectedCommunity && typeof selectedCommunity === 'object'
+    ? selectedCommunity.id
+    : selectedCommunity || '';
 
   const handleOpenModal = (mode, turno = null) => {
-    setModal({ open: true, mode, turno });
-    setForm(turno ? { ...turno } : { slot: '', start_time: '', end_time: '' });
+    setModal({ open: true, mode });
+    if (turno) {
+      setForm({
+        ...turno,
+        community: defaultCommunityId
+      });
+    } else {
+      setForm({ slot: '', start_time: '', end_time: '', community: defaultCommunityId });
+    }
   };
 
   const handleCloseModal = () => setModal({ open: false, mode: 'add', turno: null });
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
-  const handleSubmit = async e => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (modal.mode === 'add') {
-      const res = await createTimeSlot(form);
-      setTurnos([...turnos, res.data]);
-    } else {
-      const res = await updateTimeSlot(modal.turno.id, form);
-      setTurnos(turnos.map(t => (t.id === res.data.id ? res.data : t)));
-    }
-    handleCloseModal();
+    const data = {
+      ...form,
+      community: form.community || null
+    };
+
+    const action = modal.mode === 'add' 
+      ? createTimeSlot(data) 
+      : updateTimeSlot(form.id, data);
+
+    action.then(() => {
+      fetchTimeSlots().then(res => setTurnos(res.data.results || res.data));
+      handleCloseModal();
+    }).catch(error => {
+      console.error("Error guardando turno:", error.response?.data);
+    });
   };
 
   const handleDelete = async id => {
     if (window.confirm('¿Seguro que quieres eliminar este turno?')) {
       await deleteTimeSlot(id);
-      setTurnos(turnos.filter(t => t.id !== id));
+      fetchTimeSlots(selectedCommunity).then(res => setTurnos(res.data.results || res.data));
     }
   };
 
@@ -51,7 +80,7 @@ export default function AdminTurnos() {
 
   return (
   <div style={{ background: '#f6f8fa' }}>
-      <Header adminHomeIcon={true} showLogout={false} />
+      <Header showHomeIcon={true} showLogout={false} adminHomeIcon={true} isStaff={true}/>
       <div className="container py-4 flex-grow-1 d-flex justify-content-center align-items-start" style={{ minHeight: '80vh' }}>
       <div
         className="card shadow-sm rounded-4"
@@ -96,6 +125,7 @@ export default function AdminTurnos() {
                 <th style={{ minWidth: 80 }}>Slot</th>
                 <th style={{ minWidth: 90 }}>Inicio</th>
                 <th style={{ minWidth: 90 }}>Fin</th>
+                <th style={{ minWidth: 90}}>Comunidad</th> {/* Nueva columna */}
                 <th style={{ minWidth: 120 }}>Acciones</th>
               </tr>
             </thead>
@@ -105,6 +135,7 @@ export default function AdminTurnos() {
                   <td className="text-break" style={{ verticalAlign: 'middle' }}>{t.slot}</td>
                   <td className="text-break" style={{ verticalAlign: 'middle' }}>{t.start_time}</td>
                   <td className="text-break" style={{ verticalAlign: 'middle' }}>{t.end_time}</td>
+                  <td>{t.community?.name || '-'}</td> {/* Mostrar comunidad */}
                   <td>
                     <div className="d-flex align-items-center gap-2 flex-wrap">
                       <button
@@ -173,6 +204,19 @@ export default function AdminTurnos() {
                     required
                   />
                 </div>
+                <label className="form-label">Comunidad</label>
+                <select
+                  className="form-select"
+                  name="community"
+                  value={form.community}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Selecciona comunidad</option>
+                  {comunidades.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
                 <div className="modal-footer">
                   <button
                     className="btn btn-outline-secondary btn-sm"

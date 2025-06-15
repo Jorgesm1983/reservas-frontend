@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
+import { useCommunity } from '../context/CommunityContext';
 import {
   fetchUsers,
   createUser,
@@ -10,10 +11,12 @@ import {
   changeUserPassword
 } from '../services/ApiService';
 
+
 export default function AdminUsuarios() {
   const [usuarios, setUsuarios] = useState([]);
+  const { selectedCommunity } = useCommunity();
   const [viviendas, setViviendas] = useState([]);
-  const [comunidades, setComunidades] = useState([]);
+  const [comunidades, setComunidades] = useState([selectedCommunity]);
   const [modal, setModal] = useState({ open: false, mode: 'add', user: null });
   const [form, setForm] = useState({
     nombre: '',
@@ -31,12 +34,12 @@ export default function AdminUsuarios() {
 
   useEffect(() => {
     setLoading(true);
-    fetchUsers().then(res => {
+    fetchUsers(selectedCommunity).then(res => {
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setUsuarios(data);
       setLoading(false);
     });
-    fetchViviendas().then(res => {
+    fetchViviendas(selectedCommunity).then(res => {
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setViviendas(data);
     });
@@ -44,7 +47,13 @@ export default function AdminUsuarios() {
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setComunidades(data);
     });
-  }, []);
+  }, [selectedCommunity]);
+
+  const defaultCommunityId =
+  selectedCommunity && typeof selectedCommunity === 'object'
+    ? selectedCommunity.id
+    : selectedCommunity || '';
+
 
   const handleOpenModal = (mode, user = null) => {
     setModal({ open: true, mode, user });
@@ -61,7 +70,7 @@ export default function AdminUsuarios() {
       email: '',
       is_staff: false,
       vivienda: '',
-      comunidad: ''
+      comunidad: defaultCommunityId
     });
   };
 
@@ -115,7 +124,7 @@ export default function AdminUsuarios() {
 
 return (
   <div style={{ background: '#f6f8fa' }}>
-    <Header adminHomeIcon={true} showLogout={false} />
+    <Header showHomeIcon={true} showLogout={false} adminHomeIcon={true} isStaff={true}/>
     <div className="container py-4 flex-grow-1 d-flex justify-content-center align-items-start" style={{ minHeight: '80vh' }}>
       <div
         className="card shadow-sm rounded-4"

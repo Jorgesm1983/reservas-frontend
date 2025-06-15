@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { fetchReservations, createReservation, updateReservation, deleteReservation, fetchCourts, fetchTimeSlots } from '../services/ApiService';
 import Header from '../components/Header';
+import { useCommunity } from '../context/CommunityContext';
+
+
+// Utilidad para extraer el ID de comunidad de forma segura
+function getCommunityId(selectedCommunity) {
+  if (!selectedCommunity) return '';
+  if (typeof selectedCommunity === 'object' && selectedCommunity !== null) {
+    return selectedCommunity.id;
+  }
+  return selectedCommunity;
+}
 
 export default function AdminReservas() {
   const [reservas, setReservas] = useState([]);
@@ -9,17 +20,23 @@ export default function AdminReservas() {
   const [modal, setModal] = useState({ open: false, mode: 'add', reserva: null });
   const [form, setForm] = useState({ court: '', timeslot: '', date: '' });
   const [loading, setLoading] = useState(true);
+  const { selectedCommunity } = useCommunity();
 
   useEffect(() => {
     setLoading(true);
-    fetchReservations().then(res => {
+    const communityId = getCommunityId(selectedCommunity);
+
+    // Construye un objeto plano de filtros para reservas
+    const params = communityId ? { community: communityId } : {};
+
+    fetchReservations(params).then(res => {
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setReservas(data);
       setLoading(false);
     });
-    fetchCourts().then(res => setCourts(Array.isArray(res.data) ? res.data : res.data.results || []));
-    fetchTimeSlots().then(res => setSlots(Array.isArray(res.data) ? res.data : res.data.results || []));
-  }, []);
+    fetchCourts(communityId).then(res => setCourts(Array.isArray(res.data) ? res.data : res.data.results || []));
+    fetchTimeSlots(communityId).then(res => setSlots(Array.isArray(res.data) ? res.data : res.data.results || []));
+  }, [selectedCommunity]);
 
   const handleOpenModal = (mode, reserva = null) => {
     setModal({ open: true, mode, reserva });
@@ -55,7 +72,7 @@ export default function AdminReservas() {
 
   return (
   <div style={{ background: '#f6f8fa'}}>
-    <Header showHomeIcon={false} showLogout={false} adminHomeIcon={true}/>
+    <Header showHomeIcon={true} showLogout={false} adminHomeIcon={true} isStaff={true}/>
     <div className="container py-4 flex-grow-1 d-flex justify-content-center align-items-start" style={{ minHeight: '80vh' }}>
       <div
         className="card shadow-sm rounded-4"

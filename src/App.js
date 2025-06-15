@@ -1,9 +1,13 @@
 
+
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation} from 'react-router-dom';
 import ResponseInterceptor from "./services/ResponseInterceptor";
 
 // import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+
+import { CommunityProvider } from './context/CommunityContext';
+
 
 
 import ReservationForm from './components/ReservationForm';
@@ -43,6 +47,7 @@ function PrivateRoute({ children }) {
 function AppLayout() {
   const location = useLocation();
   const fondoAzul = ['/login', '/registro', '/recuperar-password'].includes(location.pathname);
+
 
 
 
@@ -87,6 +92,7 @@ function AppLayout() {
           <Route path="/invitaciones/:token/aceptar" element={<AceptarInvitacionPage />} />
           <Route path="/invitaciones/:token/rechazar" element={<RechazarInvitacionPage />} />
 
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
@@ -98,11 +104,12 @@ function AppLayout() {
 
 function App() {
   return (
-    <Router>
-      <ResponseInterceptor />
-      <AppLayout />
-    </Router>
+    <CommunityProvider>
+      <Router>
+        <ResponseInterceptor />
+        <AppLayout />
+      </Router>
+    </CommunityProvider>
   );
 }
-
 export default App;

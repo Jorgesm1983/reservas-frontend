@@ -546,7 +546,7 @@ console.log("opcionesCombinadas:", opcionesCombinadas);
 <div className="card-header d-flex justify-content-between align-items-center" style={{ gap: 8 }}>
   <div style={{ minWidth: 0, flex: 1, paddingRight: 10 }}>
     <div style={{ fontWeight: 600, color: '#0e2340', fontSize: 16, lineHeight: 1.2 }}>
-      {reserva.court?.name}
+      {reserva.court?.name || ''} · {reserva.court?.comunidad_direccion || ''}
     </div>
     <div style={{ color: '#7e8594', fontSize: 15, marginTop: 2 }}>
       {format(new Date(reserva.date), 'dd/MM/yyyy')}

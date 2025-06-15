@@ -9,7 +9,17 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Header from './Header';
+import { useCommunity } from '../context/CommunityContext';
 const PAGE_SIZE = 10;
+
+// Utilidad para extraer el ID de comunidad
+function getCommunityId(selectedCommunity) {
+  if (!selectedCommunity) return '';
+  if (typeof selectedCommunity === 'object' && selectedCommunity !== null) {
+    return selectedCommunity.id;
+  }
+  return selectedCommunity;
+}
 
 function getMonthDateRange(date = new Date()) {
   const year = date.getFullYear();
@@ -25,6 +35,7 @@ function getMonthDateRange(date = new Date()) {
 export default function ReservationList() {
   const [reservations, setReservations] = useState([]);
   const [isStaff, setIsStaff] = useState(false);
+   const { selectedCommunity } = useCommunity();
   const [filters, setFilters] = useState(() => {
     const { start, end } = getMonthDateRange();
     return {
@@ -43,34 +54,57 @@ export default function ReservationList() {
   // const userEmail = localStorage.getItem('email');
 
   useEffect(() => {
+    const communityId = getCommunityId(selectedCommunity);
+
+    // const communityId =
+    //     selectedCommunity && typeof selectedCommunity === 'object'
+    // ? selectedCommunity.id
+    // : selectedCommunity;
+
     const fetchFiltersData = async () => {
       try {
-        const [tsRes, vRes, cRes] = await Promise.all([
-          fetchTimeSlots(),
-          fetchViviendas(),
-          fetchCourts()
-        ]);
-        setTimeSlots(tsRes.data);
-        setViviendas(vRes.data);
-        setCourts(cRes.data);
+          const [tsRes, vRes, cRes] = await Promise.all([
+            fetchTimeSlots(communityId),
+            fetchViviendas(communityId),
+            fetchCourts(communityId)
+          ]);
+          setTimeSlots(tsRes.data);
+          const viviendasData = Array.isArray(vRes.data) ? vRes.data : vRes.data.results || [];
+          setViviendas(viviendasData);
+          setCourts(cRes.data);
+
       } catch (error) {
-        console.error("Error fetching filters:", error);
-      }
+      setViviendas([]);
+      setTimeSlots([]);
+      setCourts([]);
+      console.error("Error fetching filters:", error);
+    }
     };
     fetchFiltersData();
     setIsStaff(localStorage.getItem('is_staff') === 'true');
-  }, []);
+  }, [selectedCommunity]);
 
   const fetchFilteredReservations = useCallback(async () => {
     setLoading(true);
+
+  const communityId = getCommunityId(selectedCommunity);
+  console.log("communityId (debe ser número o string):", communityId, typeof communityId);
+
     const params = {
       page,
-      page_size: PAGE_SIZE
+      page_size: PAGE_SIZE,
+      ...(communityId ? { community: communityId } : {}),
     };
+  
     if (filters.startDate) params.date_after = filters.startDate;
     if (filters.endDate) params.date_before = filters.endDate;
     if (filters.timeslot) params.timeslot = filters.timeslot;
     if (filters.vivienda) params.vivienda = filters.vivienda;
+
+    // Log final de los parámetros enviados
+    console.log("Parámetros finales enviados:", params, typeof params.community);
+
+    
     try {
       const res = await fetchReservations(params);
       // DRF Pagination: results + count
@@ -91,12 +125,12 @@ export default function ReservationList() {
     } finally {
       setLoading(false);
     }
-  }, [filters, page]);
+  }, [filters, page, selectedCommunity]);
 
   useEffect(() => {
     fetchFilteredReservations();
     // eslint-disable-next-line
-  }, [filters, page, fetchFilteredReservations]);
+  }, [filters, page, fetchFilteredReservations, selectedCommunity]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -227,7 +261,7 @@ return (
               onChange={handleFilterChange}
             >
               <option value="">Todas</option>
-              {viviendas.map(v => (
+              {Array.isArray(viviendas) && viviendas.map(v => (
                 <option key={v.id} value={v.id}>{v.nombre}</option>
               ))}
             </select>

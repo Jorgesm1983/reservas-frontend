@@ -1,21 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { fetchInvitaciones, createInvitacion, updateInvitacion, deleteInvitacion } from '../services/ApiService';
 import Header from '../components/Header';
+import { useCommunity } from '../context/CommunityContext';
 
 export default function AdminInvitaciones() {
   const [invitaciones, setInvitaciones] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: 'add', invitacion: null });
   const [form, setForm] = useState({ reserva: '', invitado: '', email: '', estado: 'pendiente', nombre_invitado: '' });
   const [loading, setLoading] = useState(true);
+  const { selectedCommunity } = useCommunity();
 
   useEffect(() => {
     setLoading(true);
-    fetchInvitaciones().then(res => {
+    fetchInvitaciones(selectedCommunity).then(res => {
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setInvitaciones(data);
       setLoading(false);
     });
-  }, []);
+  }, [selectedCommunity]);
 
   const handleOpenModal = (mode, invitacion = null) => {
     setModal({ open: true, mode, invitacion });
@@ -49,7 +51,7 @@ export default function AdminInvitaciones() {
 
 return (
   <div style={{ background: '#f6f8fa'}}>
-    <Header showHomeIcon={true} showLogout={false} adminHomeIcon={true} />
+    <Header showHomeIcon={true} showLogout={false} adminHomeIcon={true} isStaff={true}/>
     <div className="container py-4 flex-grow-1 d-flex justify-content-center align-items-start" style={{ minHeight: '80vh' }}>
       <div
         className="card shadow-sm rounded-4"

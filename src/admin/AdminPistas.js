@@ -1,25 +1,44 @@
 import React, { useEffect, useState } from 'react';
-import { fetchCourts, createCourt, updateCourt, deleteCourt } from '../services/ApiService';
+import { fetchCourts, createCourt, updateCourt, deleteCourt, fetchComunidades } from '../services/ApiService';
 import Header from '../components/Header';
+import { useCommunity } from '../context/CommunityContext';
 
 export default function AdminPistas() {
   const [pistas, setPistas] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: 'add', pista: null });
   const [form, setForm] = useState({ name: '', direccion: '' });
   const [loading, setLoading] = useState(true);
+  
+  const { selectedCommunity } = useCommunity();
+  const [comunidades, setComunidades] = useState([selectedCommunity]);
+
+useEffect(() => {
+  fetchComunidades().then(res => {
+    setComunidades(res.data.results); // <-- Usa .results
+  });
+}, []);
 
   useEffect(() => {
     setLoading(true);
-    fetchCourts().then(res => {
+    fetchCourts(selectedCommunity).then(res => {
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setPistas(data);
       setLoading(false);
     });
-  }, []);
+  }, [selectedCommunity]);
+
+  const defaultCommunityId =
+  selectedCommunity && typeof selectedCommunity === 'object'
+    ? selectedCommunity.id
+    : selectedCommunity || '';
 
   const handleOpenModal = (mode, pista = null) => {
     setModal({ open: true, mode, pista });
-    setForm(pista ? { ...pista } : { name: '', direccion: '' });
+    setForm(
+      pista
+        ? { ...pista }
+        : { name: '', direccion: '', community: defaultCommunityId }
+    );
   };
 
   const handleCloseModal = () => setModal({ open: false, mode: 'add', pista: null });
@@ -28,11 +47,15 @@ export default function AdminPistas() {
 
   const handleSubmit = async e => {
     e.preventDefault();
+    const data = {
+    ...form,
+    community_id: form.community // community_id, no community
+  };
     if (modal.mode === 'add') {
-      const res = await createCourt(form);
+      const res = await createCourt(data);
       setPistas([...pistas, res.data]);
     } else {
-      const res = await updateCourt(modal.pista.id, form);
+      const res = await updateCourt(modal.pista.id, data);
       setPistas(pistas.map(p => (p.id === res.data.id ? res.data : p)));
     }
     handleCloseModal();
@@ -49,7 +72,7 @@ export default function AdminPistas() {
 
 return (
  <div style={{ background: '#f6f8fa' }}>
-     <Header adminHomeIcon={true} showLogout={false} />
+     <Header showHomeIcon={true} showLogout={false} adminHomeIcon={true} isStaff={true}/>
      <div className="container py-4 flex-grow-1 d-flex justify-content-center align-items-start" style={{ minHeight: '80vh' }}>
     <div className="container py-4">
       <div
@@ -93,6 +116,7 @@ return (
             <thead>
               <tr>
                 <th style={{ minWidth: 120 }}>Nombre</th>
+                <th style={{ minWidth: 180 }}>Comunidad</th>
                 <th style={{ minWidth: 180 }}>Dirección</th>
                 <th style={{ minWidth: 120 }}>Acciones</th>
               </tr>
@@ -101,7 +125,8 @@ return (
               {pistas.map(p => (
                 <tr key={p.id}>
                   <td className="text-break" style={{ verticalAlign: 'middle' }}>{p.name}</td>
-                  <td className="text-break" style={{ verticalAlign: 'middle' }}>{p.direccion || '-'}</td>
+                  <td className="text-break" style={{ verticalAlign: 'middle' }}>{p.comunidad_nombre || '-'}</td>
+                  <td className="text-break" style={{ verticalAlign: 'middle' }}>{p.comunidad_direccion || '-'}</td>
                   <td>
                     <div className="d-flex align-items-center gap-2 flex-wrap">
                       <button
@@ -154,13 +179,18 @@ return (
                     placeholder="Nombre"
                     required
                   />
-                  <input
-                    className="form-control mb-2"
-                    name="direccion"
-                    value={form.direccion}
+                  <select
+                    className="form-select mb-2"
+                    name="community"
+                    value={form.community}
                     onChange={handleChange}
-                    placeholder="Dirección"
-                  />
+                    required
+                  >
+                    <option value="">Selecciona comunidad</option>
+                    {Array.isArray(comunidades) && comunidades.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="modal-footer">
                   <button

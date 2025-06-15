@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchInvitadosExternos, createInvitadoExterno, updateInvitadoExterno, deleteInvitadoExternoByEmail } from '../services/ApiService';
+import { useCommunity } from '../context/CommunityContext';
 import Header from '../components/Header';
 
 export default function AdminInvitadosExternos() {
@@ -7,15 +8,16 @@ export default function AdminInvitadosExternos() {
   const [modal, setModal] = useState({ open: false, mode: 'add', invitado: null });
   const [form, setForm] = useState({ email: '', nombre: '' });
   const [loading, setLoading] = useState(true);
+  const { selectedCommunity } = useCommunity();
 
   useEffect(() => {
     setLoading(true);
-    fetchInvitadosExternos().then(res => {
+    fetchInvitadosExternos(selectedCommunity).then(res => {
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setInvitados(data);
       setLoading(false);
     });
-  }, []);
+  }, [selectedCommunity]);
 
    // Guarda el email original antes de editar (para update)
   const [originalEmail, setOriginalEmail] = useState('');
@@ -59,7 +61,7 @@ export default function AdminInvitadosExternos() {
 
  return (
   <div style={{ background: '#f6f8fa'}}>
-    <Header showHomeIcon={true} showLogout={false} adminHomeIcon={true} />
+    <Header showHomeIcon={true} showLogout={false} adminHomeIcon={true} isStaff={true}/>
     <div className="container py-4 flex-grow-1 d-flex justify-content-center align-items-start" style={{ minHeight: '80vh' }}>
       <div
         className="card shadow-sm rounded-4"
@@ -101,9 +103,11 @@ export default function AdminInvitadosExternos() {
           <table className="table table-striped table-sm align-middle">
             <thead>
               <tr>
-                <th style={{ minWidth: 140 }}>Email</th>
-                <th style={{ minWidth: 120 }}>Nombre</th>
-                <th style={{ minWidth: 110 }}>Acciones</th>
+                <th style={{ minWidth: 120 }}>Email</th>
+                <th style={{ minWidth: 90 }}>Nombre</th>
+
+                <th style={{ minWidth: 90 }}>Comunidad</th>
+                <th style={{ minWidth: 90 }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -111,6 +115,7 @@ export default function AdminInvitadosExternos() {
                 <tr key={i.email}>
                   <td className="text-break" style={{ verticalAlign: 'middle' }}>{i.email}</td>
                   <td className="text-break" style={{ verticalAlign: 'middle' }}>{i.nombre}</td>
+                  <td className="text-break" style={{ verticalAlign: 'middle' }}>{i.comunidad?.nombre || '-'}</td>
                   <td>
                     <div className="d-flex align-items-center gap-2 flex-wrap">
                       <button

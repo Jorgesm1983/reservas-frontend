@@ -49,7 +49,7 @@ export default function AdminComunidades() {
 
   return (
   <div style={{ background: '#f6f8fa'}}>
-    <Header showHomeIcon={true} showLogout={false} adminHomeIcon={true}/>
+    <Header showHomeIcon={true} showLogout={false} adminHomeIcon={true} isStaff={true}/>
     <div className="container py-4 flex-grow-1 d-flex justify-content-center align-items-start" style={{ minHeight: '80vh' }}>
       <div
         className="card shadow-sm rounded-4"
@@ -92,13 +92,16 @@ export default function AdminComunidades() {
             <thead>
               <tr>
                 <th style={{ minWidth: 140 }}>Nombre</th>
+                <th style={{ minWidth: 180 }}>Dirección</th>
                 <th style={{ minWidth: 110 }}>Acciones</th>
+
               </tr>
             </thead>
             <tbody>
               {comunidades.map(c => (
                 <tr key={c.id}>
                   <td className="text-break" style={{ verticalAlign: 'middle' }}>{c.name}</td>
+                  <td className="text-break" style={{ verticalAlign: 'middle' }}>{c.direccion}</td>
                   <td>
                     <div className="d-flex align-items-center gap-2 flex-wrap">
                       <button
@@ -140,16 +143,25 @@ export default function AdminComunidades() {
                   </h5>
                   <button type="button" className="btn-close" onClick={handleCloseModal}></button>
                 </div>
-                <div className="modal-body">
-                  <input
-                    className="form-control mb-2"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    placeholder="Nombre"
-                    required
-                  />
-                </div>
+                
+                      <div className="modal-body">
+                        <input
+                          className="form-control mb-2"
+                          name="name"
+                          value={form.name}
+                          onChange={handleChange}
+                          placeholder="Nombre"
+                          required
+                        />
+                        <input
+                          className="form-control mb-2"
+                          name="direccion"
+                          value={form.direccion}
+                          onChange={handleChange}
+                          placeholder="Dirección"
+                          required
+                        />
+                      </div>
                 <div className="modal-footer">
                   <button
                     className="btn btn-outline-secondary btn-sm"

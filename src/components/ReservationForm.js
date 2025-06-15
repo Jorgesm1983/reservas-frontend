@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-import { fetchCourts, fetchTimeSlots, createReservation, fetchReservations } from '../services/ApiService';
+import { fetchCourts, fetchTimeSlots, createReservation} from '../services/ApiService';
 import Header from './Header';
+import { useCommunity } from '../context/CommunityContext';
+import { fetchOcupados } from '../services/ApiService';
 
 function getReservaWindow() {
   const now = new Date();
@@ -31,6 +33,9 @@ function getDiasDisponibles(minDate, maxDate) {
   return dias;
 }
 
+
+
+
 export default function ReservationForm() {
   const [courts, setCourts] = useState([]);
   const [slots, setSlots] = useState([]);
@@ -43,7 +48,9 @@ export default function ReservationForm() {
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const successTimeout = useRef(null);
+  const { selectedCommunity } = useCommunity();
 
+  
 
 
   useEffect(() => {
@@ -52,37 +59,37 @@ export default function ReservationForm() {
   }, []);
 
   useEffect(() => {
-    fetchCourts().then(res => {
+    fetchCourts(selectedCommunity).then(res => {
       setCourts(res.data);
       // Si solo hay una pista, selecciónala automáticamente
       if (res.data.length === 1) {
         setSelectedCourt(String(res.data[0].id));
       }
     });
-    fetchTimeSlots().then(res => setSlots(res.data));
-  }, []);
+    fetchTimeSlots(selectedCommunity).then(res => setSlots(res.data));
+  }, [selectedCommunity]);
 
-  useEffect(() => {
-    const cargarReservasDia = async () => {
-      setOcupados([]);
-      setSelectedSlot('');
-      if (selectedDate && selectedCourt) {
-        try {
-          const res = await fetchReservations({
-            date_after: formatDateLocal(selectedDate),
-            date_before: formatDateLocal(selectedDate),
-            court: selectedCourt
-          });
-          const reservas = Array.isArray(res.data.results) ? res.data.results : res.data;
-          const ocupadosIds = reservas.map(r => String(r.timeslot?.id || r.timeslot));
-          setOcupados(ocupadosIds);
-        } catch (err) {
-          setOcupados([]);
-        }
+ useEffect(() => {
+  const cargarOcupadosDia = async () => {
+    setOcupados([]);
+    setSelectedSlot('');
+    if (selectedDate && selectedCourt) {
+      const params = {
+        court: selectedCourt,
+        date: formatDateLocal(selectedDate)
+      };
+      console.log("Parámetros enviados a fetchOcupados:", params);
+      try {
+        const ocupadosIds = await fetchOcupados(params); // Debe devolver un array de IDs
+        console.log("Horarios ocupados para esta pista y día:", ocupadosIds);
+        setOcupados(ocupadosIds.map(String));
+      } catch (err) {
+        setOcupados([]);
       }
-    };
-    cargarReservasDia();
-  }, [selectedDate, selectedCourt]);
+    }
+  };
+  cargarOcupadosDia();
+}, [selectedDate, selectedCourt]);
 
   useEffect(() => {
     if (selectedSlot && ocupados.includes(selectedSlot)) {
@@ -157,7 +164,23 @@ export default function ReservationForm() {
       // Si la fecha es futura, muestra todos
       return true;
     });
-  const slotsOcupados = slots.filter(slot => ocupados.includes(String(slot.id)));
+  const slotsOcupados = slots.filter(slot => {
+        if (!ocupados.includes(String(slot.id))) return false;
+      if (!selectedDate) return true; // Si no hay fecha seleccionada, muestra todos
+
+      // Construye la fecha-hora de fin del turno
+      const [h, m] = slot.end_time.split(":");
+      const finTurno = new Date(selectedDate);
+      finTurno.setHours(Number(h), Number(m), 0, 0);
+
+      // Si la fecha seleccionada es hoy, solo muestra turnos cuyo fin es posterior a ahora
+      const isToday = selectedDate.toDateString() === now.toDateString();
+      if (isToday) {
+        return finTurno > now;
+      }
+      // Si la fecha es futura, muestra todos
+      return true;
+    });
 
             return (
               <div style={{background: '#f6f8fa' }}>

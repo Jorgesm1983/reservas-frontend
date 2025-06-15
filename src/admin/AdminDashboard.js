@@ -6,7 +6,7 @@ import Header from '../components/Header'; // Ajusta la ruta si es necesario
 export default function AdminDashboard() {
   return (
     <div style={{ background: '#f6f8fa', display: 'flex', flexDirection: 'column' }}>
-      <Header showHomeIcon={true} showLogout={false} />
+      <Header showHomeIcon={true} showLogout={false} isStaff={true} />
       <div className="container py-4 flex-grow-1 d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
         <div
           className="card shadow-sm rounded-4"
