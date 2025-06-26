@@ -3,6 +3,15 @@ import { fetchViviendas, createVivienda, updateVivienda, deleteVivienda, fetchCo
 import Header from '../components/Header';
 import { useCommunity } from '../context/CommunityContext';
 
+// Utilidad para extraer el ID de comunidad
+function getCommunityId(selectedCommunity) {
+  if (!selectedCommunity) return '';
+  if (typeof selectedCommunity === 'object' && selectedCommunity !== null) {
+    return selectedCommunity.id;
+  }
+  return selectedCommunity;
+}
+
 
 export default function AdminViviendas() {
   const [viviendas, setViviendas] = useState([]);
@@ -20,7 +29,9 @@ export default function AdminViviendas() {
 
   useEffect(() => {
     setLoading(true);
-    fetchViviendas(selectedCommunity).then(res => {
+    const communityId = getCommunityId(selectedCommunity);
+
+    fetchViviendas(communityId).then(res => {
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setViviendas(data);
       setLoading(false);

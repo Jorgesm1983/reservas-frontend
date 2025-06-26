@@ -3,6 +3,14 @@ import { fetchTimeSlots, createTimeSlot, updateTimeSlot, deleteTimeSlot, fetchCo
 import Header from '../components/Header';
 import { useCommunity } from '../context/CommunityContext';
 
+// Utilidad para extraer el ID de comunidad
+function getCommunityId(selectedCommunity) {
+  if (!selectedCommunity) return '';
+  if (typeof selectedCommunity === 'object' && selectedCommunity !== null) {
+    return selectedCommunity.id;
+  }
+  return selectedCommunity;
+}
 
 export default function AdminTurnos() {
   const [turnos, setTurnos] = useState([]);
@@ -22,7 +30,8 @@ export default function AdminTurnos() {
 
   useEffect(() => {
     setLoading(true);
-    fetchTimeSlots(selectedCommunity).then(res => {
+    const communityId = getCommunityId(selectedCommunity);
+    fetchTimeSlots(communityId).then(res => {
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setTurnos(data);
       setLoading(false);
@@ -54,7 +63,7 @@ export default function AdminTurnos() {
     e.preventDefault();
     const data = {
       ...form,
-      community: form.community || null
+      communityid: form.community || null
     };
 
     const action = modal.mode === 'add' 

@@ -3,6 +3,14 @@ import { fetchCourts, createCourt, updateCourt, deleteCourt, fetchComunidades } 
 import Header from '../components/Header';
 import { useCommunity } from '../context/CommunityContext';
 
+function getCommunityId(selectedCommunity) {
+  if (!selectedCommunity) return '';
+  if (typeof selectedCommunity === 'object' && selectedCommunity !== null) {
+    return selectedCommunity.id;
+  }
+  return selectedCommunity;
+}
+
 export default function AdminPistas() {
   const [pistas, setPistas] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: 'add', pista: null });
@@ -20,7 +28,8 @@ useEffect(() => {
 
   useEffect(() => {
     setLoading(true);
-    fetchCourts(selectedCommunity).then(res => {
+     const communityId = getCommunityId(selectedCommunity);
+    fetchCourts(communityId).then(res => {
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setPistas(data);
       setLoading(false);

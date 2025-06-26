@@ -10,17 +10,21 @@ export default function CommunitySelector({ selectedCommunity, setSelectedCommun
     });
   }, []);
 
-  return (
-    <select 
-      className="form-select" 
-      value={selectedCommunity} 
-      onChange={(e) => setSelectedCommunity(e.target.value)}
-      style={{ maxWidth: 200 }}
-    >
-      <option value="">Todas las comunidades</option>
-      {comunidades.map(c => (
-        <option key={c.id} value={c.id}>{c.name}</option>
-      ))}
-    </select>
+return (
+    <div className="selector-comunidad-container">
+      <select
+        className="selector-comunidad"
+        value={selectedCommunity?.id || ''}
+        onChange={(e) => {
+          const selected = comunidades.find(c => c.id === parseInt(e.target.value));
+          setSelectedCommunity(selected || null);
+        }}
+      >
+        <option value="">Seleccionar comunidad</option>
+        {comunidades.map(c => (
+          <option key={c.id} value={c.id}>{c.name}</option>
+        ))}
+      </select>
+    </div>
   );
 }

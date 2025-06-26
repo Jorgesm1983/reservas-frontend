@@ -35,71 +35,72 @@ export default function Header({ showHomeIcon = false, showLogout = false, admin
       <span style={{ fontWeight: 700, fontSize: 22, color: '#0e2340', letterSpacing: 0.5 }}>
         PistaReserva <span style={{ color: '#c6ff00', fontSize: 18 }}>●</span>
       </span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {isStaff && (
-          <CommunitySelector
-            selectedCommunity={selectedCommunity}
-            setSelectedCommunity={setSelectedCommunity}
-          />
-        )}
-        {showHome && (
-          <button
-            className="btn btn-link"
-            style={{
-              color: '#0e2340',
-              fontSize: 22,
-              background: 'none',
-              border: 'none',
-              lineHeight: 1,
-              minWidth: 0,
-              boxShadow: 'none'
-            }}
-            onClick={() => navigate('/')}
-            aria-label="Volver al home"
-            type="button"
-          >
-            <i className="bi bi-house-door"></i>
-          </button>
-        )}
-          {showAdminHome && (
-          <button
-            className="btn btn-link"
-            style={{
-              color: '#0e2340',
-              fontSize: 22,
-              background: 'none',
-              border: 'none',
-              lineHeight: 1,
-              minWidth: 0,
-              boxShadow: 'none'
-            }}
-            onClick={() => navigate('/admin')}
-            aria-label="Ir al panel de administración"
-            type="button"
-          >
-            <i className="bi bi-speedometer2"></i>
-          </button>
-        )}
-        {showLogout && (
-          <button
-            className="btn btn-link"
-            style={{
-              color: '#0e2340',
-              fontSize: 22,
-              background: 'none',
-              border: 'none',
-              lineHeight: 1,
-              minWidth: 0,
-              boxShadow: 'none'
-            }}
-            onClick={handleLogout}
-            aria-label="Cerrar sesión"
-            type="button"
-          >
-            <i className="bi bi-box-arrow-right"></i>
-          </button>
-        )}
-      </div>
+<div className="header-actions">
+  {isStaff && (
+    <CommunitySelector
+      selectedCommunity={selectedCommunity}
+      setSelectedCommunity={setSelectedCommunity}
+    />
+  )}
+  {showHome && (
+    <button
+      className="btn btn-link"
+      style={{
+        color: '#0e2340',
+        fontSize: 22,
+        background: 'none',
+        border: 'none',
+        lineHeight: 1,
+        minWidth: 0,
+        boxShadow: 'none'
+      }}
+      onClick={() => navigate('/')}
+      aria-label="Volver al home"
+      type="button"
+    >
+      <i className="bi bi-house-door"></i>
+    </button>
+  )}
+  {showAdminHome && (
+    <button
+      className="btn btn-link"
+      style={{
+        color: '#0e2340',
+        fontSize: 22,
+        background: 'none',
+        border: 'none',
+        lineHeight: 1,
+        minWidth: 0,
+        boxShadow: 'none'
+      }}
+      onClick={() => navigate('/admin')}
+      aria-label="Ir al panel de administración"
+      type="button"
+    >
+      <i className="bi bi-speedometer2"></i>
+    </button>
+  )}
+  {showLogout && (
+    <button
+      className="btn btn-link"
+      style={{
+        color: '#0e2340',
+        fontSize: 22,
+        background: 'none',
+        border: 'none',
+        lineHeight: 1,
+        minWidth: 0,
+        boxShadow: 'none'
+      }}
+      onClick={handleLogout}
+      aria-label="Cerrar sesión"
+      type="button"
+    >
+      <i className="bi bi-box-arrow-right"></i>
+    </button>
+  )}
+</div>
+
     </header>
   );
 }
