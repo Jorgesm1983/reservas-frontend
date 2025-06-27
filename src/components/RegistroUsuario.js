@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 function RegistroUsuario() {
@@ -7,17 +7,43 @@ function RegistroUsuario() {
     apellido: '',
     email: '',
     password: '',
+    codigo_comunidad: '',
     vivienda_id: ''
   });
   const [viviendas, setViviendas] = useState([]);
+  const [codigoValido, setCodigoValido] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [errores, setErrores] = useState({});
+  const [comunidadNombre, setComunidadNombre] = useState('');
 
-  useEffect(() => {
-    fetch('/api/obtener_viviendas')
-      .then(res => res.json())
-      .then(data => setViviendas(data));
-  }, []);
+  // Elimina el useEffect inicial que cargaba todas las viviendas
+
+  const handleCodigoChange = async (e) => {
+    const codigo = e.target.value;
+    setFormData(prev => ({ ...prev, codigo_comunidad: codigo, vivienda_id: '' }));
+    setCodigoValido(false);
+    setViviendas([]);
+    setComunidadNombre('');
+    if (codigo.trim().length > 0) {
+      const res = await fetch('/api/viviendas_por_codigo/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo })
+      });
+      const data = await res.json();
+      if (!data.error && Array.isArray(data.viviendas) && data.viviendas.length > 0) {
+        setViviendas(data.viviendas);
+        setCodigoValido(true);
+        setComunidadNombre(data.comunidad_nombre || '');
+        setErrores(prev => ({ ...prev, codigo_comunidad: '' }));
+      } else {
+        setViviendas([]);
+        setComunidadNombre('');
+        setCodigoValido(false);
+        setErrores(prev => ({ ...prev, codigo_comunidad: data.error || 'Código no válido' }));
+      }
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,7 +80,25 @@ function RegistroUsuario() {
     } catch (error) {
       setMensaje(error.message);
     }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+          setErrores(prev => ({ ...prev, email: 'Formato de email no válido' }));
+          return;
+        }
+
   };
+
+const handleBlur = (e) => {
+  const { name, value } = e.target;
+  if (name === 'email') {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      setErrores(prev => ({ ...prev, email: 'Formato de email no válido' }));
+      return;
+    }
+  }
+  setErrores(prev => ({ ...prev, [name]: '' }));
+};
 
   return (
     <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-center">
@@ -100,7 +144,7 @@ function RegistroUsuario() {
             name="nombre"
             value={formData.nombre}
             onChange={handleChange}
-            style={{ background: 'rgba(255,255,255,0.95)' }}
+            onBlur={handleBlur}
             required
           />
           {errores.nombre && <small className="text-danger">{errores.nombre}</small>}
@@ -112,7 +156,7 @@ function RegistroUsuario() {
             name="apellido"
             value={formData.apellido}
             onChange={handleChange}
-            style={{ background: 'rgba(255,255,255,0.95)' }}
+            onBlur={handleBlur}
             required
           />
           {errores.apellido && <small className="text-danger">{errores.apellido}</small>}
@@ -125,10 +169,11 @@ function RegistroUsuario() {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            style={{ background: 'rgba(255,255,255,0.95)' }}
+            onBlur={handleBlur}
             required
           />
           {errores.email && <small className="text-danger">{errores.email}</small>}
+
         </div>
         <div className="mb-3">
           <input
@@ -138,27 +183,62 @@ function RegistroUsuario() {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            style={{ background: 'rgba(255,255,255,0.95)' }}
+            onBlur={handleBlur}
             required
           />
           {errores.password && <small className="text-danger">{errores.password}</small>}
         </div>
-        <div className="mb-3">
-          <select
-            className="form-select form-select-lg rounded-pill border-0"
-            name="vivienda_id"
-            value={formData.vivienda_id}
-            onChange={handleChange}
-            style={{ background: 'rgba(255,255,255,0.95)' }}
-            required
-          >
-            <option value="">Selecciona vivienda</option>
-            {viviendas.map(v => (
-              <option key={v.id} value={v.id}>{v.nombre}</option>
-            ))}
-          </select>
-          {errores.vivienda_id && <small className="text-danger">{errores.vivienda_id}</small>}
-        </div>
+<div className="mb-3 position-relative">
+  <input
+    className="form-control form-control-lg rounded-pill border-0"
+    placeholder="Código de comunidad"
+    name="codigo_comunidad"
+    value={formData.codigo_comunidad}
+    onChange={handleCodigoChange}
+
+    onBlur={handleBlur}
+    required
+    autoComplete="off"
+  />
+  {comunidadNombre && (
+    <span
+      className="position-absolute top-50 translate-middle-y end-0 me-3 px-3 py-1 text-dark"
+      style={{
+        fontSize: '1rem',
+    
+        borderRadius: '2rem',
+        height: '70%',
+        display: 'flex',
+        alignItems: 'center',
+        boxShadow: 'none', // elimina cualquier sombra
+        border: 'none',    // elimina cualquier borde
+        pointerEvents: 'none',
+      }}
+    >
+      {comunidadNombre}
+    </span>
+  )}
+  {errores.codigo_comunidad && <small className="text-danger">{errores.codigo_comunidad}</small>}
+</div>
+
+
+          {codigoValido && (
+            <div className="mb-3">
+              <select
+                className="form-select rounded-pill border-0"
+                name="vivienda_id"
+                value={formData.vivienda_id}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Selecciona vivienda</option>
+                {viviendas.map(v => (
+                  <option key={v.id} value={v.id}>{v.nombre}</option>
+                ))}
+              </select>
+              {errores.vivienda_id && <small className="text-danger">{errores.vivienda_id}</small>}
+            </div>
+          )}
         {mensaje && <div className="alert alert-info">{mensaje}</div>}
         <button
           type="submit"

@@ -30,6 +30,7 @@ import AdminViviendas from './admin/AdminViviendas';
 import AdminInvitaciones from './admin/AdminInvitaciones';
 import AdminInvitadosExternos from './admin/AdminInvitadosExternos';
 import AdminComunidades from './admin/AdminComunidades';
+import ResetPasswordConfirm from './components/ResetPasswordConfirm';
 
 
 import Home from './components/Home'
@@ -46,7 +47,9 @@ function PrivateRoute({ children }) {
 
 function AppLayout() {
   const location = useLocation();
-  const fondoAzul = ['/login', '/registro', '/recuperar-password'].includes(location.pathname);
+  const fondoAzul = ['/login', '/registro', '/recuperar-password', '/reset-password-confirm/'].includes(location.pathname);
+
+  console.log(location.pathname, fondoAzul);
 
 
 
@@ -91,6 +94,7 @@ function AppLayout() {
           <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
           <Route path="/invitaciones/:token/aceptar" element={<AceptarInvitacionPage />} />
           <Route path="/invitaciones/:token/rechazar" element={<RechazarInvitacionPage />} />
+          <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} />
 
 
           <Route path="*" element={<Navigate to="/" replace />} />

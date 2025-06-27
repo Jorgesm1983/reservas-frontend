@@ -110,8 +110,17 @@ export async function fetchOcupados({ court, date }) {
 }
 
 
-export const solicitarResetPassword = ({ email }) =>
-  API.post('reset-password/', { email });
+export async function solicitarResetPassword({ email }) {
+  const response = await fetch('/api/password_reset/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  if (!response.ok) {
+    throw new Error('Error al solicitar el reseteo');
+  }
+  return response.json();
+}
 
 // Autenticación
 export const login = async (email, password) => {

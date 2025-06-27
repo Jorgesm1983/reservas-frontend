@@ -788,3 +788,16 @@ header {
     justify-content: center;
   }
 }
+
+input::placeholder, select::placeholder, textarea::placeholder {
+  font-size: 1rem; /* O el tamaño que uses en .form-control-lg */
+  color: #adb5bd;
+  opacity: 1;
+  font-family: inherit;
+}
+
+input.form-control, select.form-control, input[type="email"].form-control-lg {
+  height: 48px; /* o el valor que prefieras */
+  line-height: 1.5;
+  font-size: 1rem; /* o el tamaño que uses en .form-control-lg */
+}
