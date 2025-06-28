@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { login } from '../services/ApiService';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -18,9 +18,7 @@ const LoginPage = () => {
       if (response.data.email) localStorage.setItem('email', response.data.email);
       if (response.data.user_id) localStorage.setItem('user_id', response.data.user_id);
       if (response.data.is_staff !== undefined) localStorage.setItem('is_staff', response.data.is_staff);
-      if (response.data.access) localStorage.setItem('access', response.data.access);
-      if (response.data.refresh) localStorage.setItem('refresh', response.data.refresh);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
+      
       navigate('/');
     } catch (err) {
       let errorMessage = 'Usuario o contraseña incorrectos';

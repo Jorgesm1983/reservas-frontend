@@ -1,12 +1,14 @@
 // src/services/ApiService.js
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
+// 2. Creamos instancia de axios configurada con la URL base
 const API = axios.create({
-  baseURL: 'http://192.168.1.37:8000/api/',  // ← /api/ es crítico
-  withCredentials: true,
+  baseURL: API_URL,
+  withCredentials: true, // Para enviar cookies (CSRF)
   headers: {
-    'X-Requested-With': 'XMLHttpRequest',
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   }
 });
 
@@ -29,102 +31,89 @@ API.interceptors.request.use(config => {
 // Endpoints
 export const fetchCourts = (communityId) =>
   communityId
-    ? API.get(`courts/?community=${communityId}`)
-    : API.get('courts/');
-export const createCourt = (data) => API.post('courts/', data);
-export const updateCourt = (id, data) => API.put(`courts/${id}/`, data);
-export const deleteCourt = (id) => API.delete(`courts/${id}/`);
+    ? API.get(`api/courts/?community=${communityId}`)
+    : API.get('api/courts/');
+export const createCourt = (data) => API.post('api/courts/', data);
+export const updateCourt = (id, data) => API.put(`api/courts/${id}/`, data);
+export const deleteCourt = (id) => API.delete(`api/courts/${id}/`);
 
 export const fetchTimeSlots = (communityId) =>
   communityId
-    ? API.get(`timeslots/?community=${communityId}`)
-    : API.get('timeslots/');
-export const createTimeSlot = (data) => API.post('timeslots/', data);
-export const updateTimeSlot = (id, data) => API.put(`timeslots/${id}/`, data);
-export const deleteTimeSlot = (id) => API.delete(`timeslots/${id}/`);
+    ? API.get(`api/timeslots/?community=${communityId}`)
+    : API.get('api/timeslots/');
+export const createTimeSlot = (data) => API.post('api/timeslots/', data);
+export const updateTimeSlot = (id, data) => API.put(`api/timeslots/${id}/`, data);
+export const deleteTimeSlot = (id) => API.delete(`api/timeslots/${id}/`);
 
 export const fetchReservations = (params) =>
-  API.get('reservations/', { params });
-export const createReservation = data => API.post('reservations/', data);
-export const deleteReservation = id => API.delete(`reservations/${id}/`);  // ← Añadido
-export const updateReservation = (id, data) => API.put(`reservations/${id}/`, data);
+  API.get('api/reservations/', { params });
+export const createReservation = data => API.post('api/reservations/', data);
+export const deleteReservation = id => API.delete(`api/reservations/${id}/`);  // ← Añadido
+export const updateReservation = (id, data) => API.put(`api/reservations/${id}/`, data);
 
 export const fetchUsers = (communityId) =>
   communityId
-    ? API.get(`users/?community=${communityId}`)
-    : API.get('users/');
-export const createUser = (data) => API.post('users/', data);
-export const updateUser = (id, data) => API.put(`users/${id}/`, data);
-export const deleteUser = (id) => API.delete(`users/${id}/`);
+    ? API.get(`api/users/?community=${communityId}`)
+    : API.get('api/users/');
+export const createUser = (data) => API.post('api/users/', data);
+export const updateUser = (id, data) => API.put(`api/users/${id}/`, data);
+export const deleteUser = (id) => API.delete(`api/users/${id}/`);
 export const changeUserPassword = (userId, data) =>
-  API.post(`usuarios/${userId}/cambiar_password/`, data);
+  API.post(`api/usuarios/${userId}/cambiar_password/`, data);
 
 
 export const fetchViviendas = (communityId) =>
   communityId
-    ? API.get(`viviendas/?community=${communityId}`)
-    : API.get('viviendas/');
-export const createVivienda = (data) => API.post('viviendas/', data);
-export const updateVivienda = (id, data) => API.put(`viviendas/${id}/`, data);
-export const deleteVivienda = (id) => API.delete(`viviendas/${id}/`);
+    ? API.get(`api/viviendas/?community=${communityId}`)
+    : API.get('api/viviendas/');
+export const createVivienda = (data) => API.post('api/viviendas/', data);
+export const updateVivienda = (id, data) => API.put(`api/viviendas/${id}/`, data);
+export const deleteVivienda = (id) => API.delete(`api/viviendas/${id}/`);
 
-export const fetchUsuariosComunidad = () => API.get('usuarios-comunidad/');
-export const invitarJugadores = (reservaId, data) => API.post(`/mis-reservas/${reservaId}/invitar/`, data);
-export const eliminarInvitacion = (invitacionId) => API.delete(`/invitaciones/${invitacionId}/`);
-export const fetchInvitadosFrecuentes = () => API.get('invitaciones-frecuentes/');
-export const fetchMyReservations = (params) => API.get('mis-reservas/', { params });
+export const fetchUsuariosComunidad = () => API.get('api/usuarios-comunidad/');
+export const invitarJugadores = (reservaId, data) => API.post(`api/mis-reservas/${reservaId}/invitar/`, data);
+export const eliminarInvitacion = (invitacionId) => API.delete(`api/invitaciones/${invitacionId}/`);
+export const fetchInvitadosFrecuentes = () => API.get('api/invitaciones-frecuentes/');
+export const fetchMyReservations = (params) => API.get('api/mis-reservas/', { params });
 
 export const fetchInvitaciones = (communityId) =>
   communityId
-    ? API.get(`invitaciones/?community=${communityId}`)
-    : API.get('invitaciones/');
-export const createInvitacion = (data) => API.post('invitaciones/', data);
-export const updateInvitacion = (id, data) => API.put(`invitaciones/${id}/`, data);
-export const deleteInvitacion = (id) => API.delete(`invitaciones/${id}/`);
+    ? API.get(`api/invitaciones/?community=${communityId}`)
+    : API.get('api/invitaciones/');
+export const createInvitacion = (data) => API.post('api/invitaciones/', data);
+export const updateInvitacion = (id, data) => API.put(`api/invitaciones/${id}/`, data);
+export const deleteInvitacion = (id) => API.delete(`api/invitaciones/${id}/`);
 
 export const fetchInvitadosExternos = (communityId) =>
   communityId
-    ? API.get(`invitados-externos/?community=${communityId}`)
-    : API.get('invitados-externos/');
-export const createInvitadoExterno = (data) => API.post('invitados-externos/', data);
-export const updateInvitadoExterno = (email, data) => API.put(`invitados-externos/${encodeURIComponent(email)}/`, data);
-export const deleteInvitadoExterno = (id) => API.delete(`invitados-frecuentes/${id}/`);
-export const deleteInvitadoExternoByEmail = (email) => API.delete(`invitados-externos/${encodeURIComponent(email)}/`);
+    ? API.get(`api/invitados-externos/?community=${communityId}`)
+    : API.get('api/invitados-externos/');
+export const createInvitadoExterno = (data) => API.post('api/invitados-externos/', data);
+export const updateInvitadoExterno = (email, data) => API.put(`api/invitados-externos/${encodeURIComponent(email)}/`, data);
+export const deleteInvitadoExterno = (id) => API.delete(`api/invitados-frecuentes/${id}/`);
+export const deleteInvitadoExternoByEmail = (email) => API.delete(`api/invitados-externos/${encodeURIComponent(email)}/`);
 
-export const fetchComunidades = () => API.get('comunidades/');
-export const createComunidad = (data) => API.post('comunidades/', data);
-export const updateComunidad = (id, data) => API.put(`comunidades/${id}/`, data);
-export const deleteComunidad = (id) => API.delete(`comunidades/${id}/`);
-export async function fetchOcupados({ court, date }) {
-  const params = new URLSearchParams({ court, date_after: date });
-  const accessToken = localStorage.getItem('access');
-  const response = await fetch(`/api/horarios-ocupados/?${params.toString()}`, {
-    headers: {
-      'Authorization': accessToken ? `Bearer ${accessToken}` : undefined,
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include'
-  });
-  if (!response.ok) throw new Error('Error al consultar horarios ocupados');
-  return await response.json();
-}
+export const fetchComunidades = () => API.get('api/comunidades/');
+export const createComunidad = (data) => API.post('api/comunidades/', data);
+export const updateComunidad = (id, data) => API.put(`api/comunidades/${id}/`, data);
+export const deleteComunidad = (id) => API.delete(`api/comunidades/${id}/`);
+
+// 5. Funciones convertidas de fetch a axios
+export const fetchOcupados = async ({ court, date }) => {
+  const params = { court, date_after: date };
+  const response = await API.get('/api/horarios-ocupados/', { params });
+  return response.data;
+};
 
 
-export async function solicitarResetPassword({ email }) {
-  const response = await fetch('/api/password_reset/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email })
-  });
-  if (!response.ok) {
-    throw new Error('Error al solicitar el reseteo');
-  }
-  return response.json();
-}
+export const solicitarResetPassword = async ({ email }) => {
+  const response = await API.post('/api/password_reset/', { email });
+  return response.data;
+};
 
 // Autenticación
 export const login = async (email, password) => {
-  const response = await API.post('token/', { email, password });
+  const response = await API.post('api/token/', { email, password });
   if (response.data.access) {
     localStorage.setItem('access', response.data.access);
     localStorage.setItem('refresh', response.data.refresh);
@@ -136,16 +125,8 @@ export const logout = () => {
   localStorage.removeItem('access');
   localStorage.removeItem('refresh');
 
-  window.location.href = '/login';
+  window.location.href = 'api//login';
 };
-
-API.interceptors.request.use(config => {
-  const token = localStorage.getItem('access');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 export { API };
 
