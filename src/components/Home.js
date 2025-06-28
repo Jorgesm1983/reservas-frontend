@@ -276,8 +276,8 @@ function recargarDashboard() {
     });
 }
 
-console.log("proximosPartidos", proximosPartidos);
-console.log("indiceProximo", indiceProximo);
+// console.log("proximosPartidos", proximosPartidos);
+// console.log("indiceProximo", indiceProximo);
 
 if (loading) {
   return (

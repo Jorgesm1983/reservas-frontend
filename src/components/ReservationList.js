@@ -3,7 +3,6 @@ import {
   fetchReservations,
   fetchTimeSlots,
   fetchViviendas,
-  // deleteReservation,
   fetchCourts
 } from '../services/ApiService';
 import { format } from 'date-fns';
@@ -12,7 +11,6 @@ import Header from './Header';
 import { useCommunity } from '../context/CommunityContext';
 const PAGE_SIZE = 10;
 
-// Utilidad para extraer el ID de comunidad
 function getCommunityId(selectedCommunity) {
   if (!selectedCommunity) return '';
   if (typeof selectedCommunity === 'object' && selectedCommunity !== null) {
@@ -35,14 +33,15 @@ function getMonthDateRange(date = new Date()) {
 export default function ReservationList() {
   const [reservations, setReservations] = useState([]);
   const [isStaff, setIsStaff] = useState(false);
-   const { selectedCommunity } = useCommunity();
+  const { selectedCommunity } = useCommunity();
   const [filters, setFilters] = useState(() => {
     const { start, end } = getMonthDateRange();
     return {
       startDate: start,
       endDate: end,
       timeslot: '',
-      vivienda: ''
+      vivienda: '',
+      court: '', // <-- Añadido filtro por pista
     };
   });
   const [timeSlots, setTimeSlots] = useState([]);
@@ -51,34 +50,27 @@ export default function ReservationList() {
   const [courts, setCourts] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  // const userEmail = localStorage.getItem('email');
 
   useEffect(() => {
     const communityId = getCommunityId(selectedCommunity);
 
-    // const communityId =
-    //     selectedCommunity && typeof selectedCommunity === 'object'
-    // ? selectedCommunity.id
-    // : selectedCommunity;
-
     const fetchFiltersData = async () => {
       try {
-          const [tsRes, vRes, cRes] = await Promise.all([
-            fetchTimeSlots(communityId),
-            fetchViviendas(communityId),
-            fetchCourts(communityId)
-          ]);
-          setTimeSlots(tsRes.data);
-          const viviendasData = Array.isArray(vRes.data) ? vRes.data : vRes.data.results || [];
-          setViviendas(viviendasData);
-          setCourts(cRes.data);
-
+        const [tsRes, vRes, cRes] = await Promise.all([
+          fetchTimeSlots(communityId),
+          fetchViviendas(communityId),
+          fetchCourts(communityId)
+        ]);
+        setTimeSlots(tsRes.data);
+        const viviendasData = Array.isArray(vRes.data) ? vRes.data : vRes.data.results || [];
+        setViviendas(viviendasData);
+        setCourts(cRes.data);
       } catch (error) {
-      setViviendas([]);
-      setTimeSlots([]);
-      setCourts([]);
-      console.error("Error fetching filters:", error);
-    }
+        setViviendas([]);
+        setTimeSlots([]);
+        setCourts([]);
+        console.error("Error fetching filters:", error);
+      }
     };
     fetchFiltersData();
     setIsStaff(localStorage.getItem('is_staff') === 'true');
@@ -87,27 +79,22 @@ export default function ReservationList() {
   const fetchFilteredReservations = useCallback(async () => {
     setLoading(true);
 
-  const communityId = getCommunityId(selectedCommunity);
-  console.log("communityId (debe ser número o string):", communityId, typeof communityId);
+    const communityId = getCommunityId(selectedCommunity);
 
     const params = {
       page,
       page_size: PAGE_SIZE,
       ...(communityId ? { community: communityId } : {}),
     };
-  
+
     if (filters.startDate) params.date_after = filters.startDate;
     if (filters.endDate) params.date_before = filters.endDate;
     if (filters.timeslot) params.timeslot = filters.timeslot;
     if (filters.vivienda) params.vivienda = filters.vivienda;
+    if (filters.court) params.court = filters.court; // <-- Añadido filtro por pista
 
-    // Log final de los parámetros enviados
-    console.log("Parámetros finales enviados:", params, typeof params.community);
-
-    
     try {
       const res = await fetchReservations(params);
-      // DRF Pagination: results + count
       if (Array.isArray(res.data?.results)) {
         setReservations(res.data.results);
         setTotal(res.data.count || 0);
@@ -138,18 +125,7 @@ export default function ReservationList() {
     setPage(1); // Reset to first page on filter change
   };
 
-  // const handleDelete = async (id) => {
-  //   if (window.confirm("¿Seguro que quieres cancelar esta reserva?")) {
-  //     try {
-  //       await deleteReservation(id);
-  //       fetchFilteredReservations(); // <-- Recarga la página actual
-  //     } catch (error) {
-  //       console.error("Error cancelando reserva:", error);
-  //       alert(error.response?.data?.error || "No se pudo cancelar la reserva");
-  //     }
-  //   }
-  // };
-
+ 
   // Paginación simple
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -201,6 +177,19 @@ return (
             >
               Histórico de reservas
             </div>
+            <div className="mb-3" style={{ maxWidth: 320 }}>
+          <select
+            name="court"
+            className="form-select"
+            value={filters.court}
+            onChange={handleFilterChange}
+          >
+            <option value="">Todas las pistas</option>
+            {courts.map(court => (
+              <option key={court.id} value={court.id}>{court.name}</option>
+            ))}
+          </select>
+        </div>
             <div
               style={{
                 color: '#7e8594',
@@ -278,14 +267,20 @@ return (
       No hay reservas en este rango
     </div>
   ) : (
-    reservations.map(res => {
-      const ts = timeSlots.find(ts => ts.id === (res.timeslot?.id || res.timeslot));
-      const pista = courts.find(c => c.id === (res.court?.id || res.court));
-      // const resDate = new Date(res.date + 'T' + (ts?.start_time || '00:00'));
-      // const now = new Date();
-      // // const isActive = resDate > now;
-      const user = res.user || {};
-      const userEmail = localStorage.getItem('email');
+reservations
+  .slice() // Evita mutar el estado original
+  .sort((a, b) => {
+    const tsA = timeSlots.find(ts => ts.id === (a.timeslot?.id || a.timeslot));
+    const tsB = timeSlots.find(ts => ts.id === (b.timeslot?.id || b.timeslot));
+    const fechaA = new Date(a.date + 'T' + (tsA?.start_time || '00:00'));
+    const fechaB = new Date(b.date + 'T' + (tsB?.start_time || '00:00'));
+    return fechaA - fechaB;
+  })
+  .map(res => {
+    const ts = timeSlots.find(ts => ts.id === (res.timeslot?.id || res.timeslot));
+    const pista = courts.find(c => c.id === (res.court?.id || res.court));
+    const user = res.user || {};
+    const userEmail = localStorage.getItem('email');
 
       return (
         <div key={res.id}

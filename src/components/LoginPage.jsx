@@ -33,7 +33,7 @@ const LoginPage = () => {
 
   return (
     <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-center">
-      <div className="mb-4 text-center position-relative" style={{ width: '100%' }}>
+      <div className="mb-4 text-center position-relative">
         <span style={{
           fontFamily: 'Montserrat, Arial, sans-serif',
           fontSize: '2.5rem',

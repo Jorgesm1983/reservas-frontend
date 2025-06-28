@@ -78,10 +78,10 @@ export default function ReservationForm() {
         court: selectedCourt,
         date: formatDateLocal(selectedDate)
       };
-      console.log("Parámetros enviados a fetchOcupados:", params);
+      // console.log("Parámetros enviados a fetchOcupados:", params);
       try {
         const ocupadosIds = await fetchOcupados(params); // Debe devolver un array de IDs
-        console.log("Horarios ocupados para esta pista y día:", ocupadosIds);
+        // console.log("Horarios ocupados para esta pista y día:", ocupadosIds);
         setOcupados(ocupadosIds.map(String));
       } catch (err) {
         setOcupados([]);

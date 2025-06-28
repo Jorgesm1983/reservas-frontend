@@ -33,7 +33,7 @@ export default function AdminInvitadosExternos() {
   useEffect(() => {
     setLoading(true);
     const communityId = getCommunityId(selectedCommunity);
-    console.log('communityId:', communityId);  // Debe ser undefined si no hay comunidad seleccionada
+    // console.log('communityId:', communityId);  // Debe ser undefined si no hay comunidad seleccionada
     
     fetchInvitadosExternos(communityId).then(res => {
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];

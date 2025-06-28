@@ -465,8 +465,8 @@ const emailsUsuariosComunidad = usuariosPlanos
   .map(u => u.email && u.email.trim().toLowerCase())
   .filter(Boolean);
 
-console.log("usuariosPlanos:", usuariosPlanos);
-console.log("emailsUsuariosComunidad:", emailsUsuariosComunidad);
+// console.log("usuariosPlanos:", usuariosPlanos);
+// console.log("emailsUsuariosComunidad:", emailsUsuariosComunidad);
 
 // Normaliza emails de invitados ya invitados a la reserva
 const emailsInvitados = new Set(
@@ -475,8 +475,8 @@ const emailsInvitados = new Set(
     .filter(Boolean)
 );
 
-console.log("reserva.invitaciones:", reserva.invitaciones);
-console.log("emailsInvitados:", [...emailsInvitados]);
+// console.log("reserva.invitaciones:", reserva.invitaciones);
+// console.log("emailsInvitados:", [...emailsInvitados]);
 
 // Filtra invitados externos frecuentes que NO son usuarios internos
 const invitadosExternosFrecuentes = invitadosFrecuentes.filter(invitado => {
@@ -488,19 +488,19 @@ const invitadosExternosFrecuentes = invitadosFrecuentes.filter(invitado => {
   return esExterno;
 });
 
-console.log("invitadosExternosFrecuentes:", invitadosExternosFrecuentes);
+// console.log("invitadosExternosFrecuentes:", invitadosExternosFrecuentes);
 
 // Filtra los que ya han sido invitados a esta reserva
 const invitadosExternosFrecuentesFiltrados = invitadosExternosFrecuentes.filter(invitado => {
   const email = invitado.email && invitado.email.trim().toLowerCase();
   const noYaInvitado = email && !emailsInvitados.has(email);
-  if (!noYaInvitado) {
-    console.log(`Ya invitado a esta reserva: ${invitado.email} (${invitado.nombre_invitado})`);
-  }
+  // if (!noYaInvitado) {
+  //   console.log(`Ya invitado a esta reserva: ${invitado.email} (${invitado.nombre_invitado})`);
+  // }
   return noYaInvitado;
 });
 
-console.log("invitadosExternosFrecuentesFiltrados:", invitadosExternosFrecuentesFiltrados);
+// console.log("invitadosExternosFrecuentesFiltrados:", invitadosExternosFrecuentesFiltrados);
 
 // Filtra y agrupa usuarios internos no invitados aún
 const usuariosPlanosFiltrados = usuariosPlanos.filter(u => {
@@ -509,8 +509,8 @@ const usuariosPlanosFiltrados = usuariosPlanos.filter(u => {
 });
 const usuariosAgrupados = agruparUsuariosPorVivienda(usuariosPlanosFiltrados);
 
-console.log("usuariosPlanosFiltrados:", usuariosPlanosFiltrados);
-console.log("usuariosAgrupados:", usuariosAgrupados);
+// console.log("usuariosPlanosFiltrados:", usuariosPlanosFiltrados);
+// console.log("usuariosAgrupados:", usuariosAgrupados);
 
 // Opciones para el <Select />
 const opcionesCombinadas = [
@@ -528,7 +528,7 @@ const opcionesCombinadas = [
   }
 ];
 
-console.log("opcionesCombinadas:", opcionesCombinadas);
+// console.log("opcionesCombinadas:", opcionesCombinadas);
               return (
                 <div
   key={reserva.id}
