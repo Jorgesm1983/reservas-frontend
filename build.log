@@ -1,0 +1,151 @@
+nohup: ignoring input
+time="2025-07-02T16:06:19Z" level=warning msg="/home/ubuntu/padel_deploy/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2025-07-02T16:06:19Z" level=warning msg="Docker Compose is configured to build using Bake, but buildx isn't installed"
+#0 building with "default" instance using docker driver
+
+#1 [backend internal] load build definition from Dockerfile
+#1 transferring dockerfile: 595B done
+#1 DONE 0.0s
+
+#2 [backend internal] load metadata for docker.io/library/python:3.11-slim
+#2 DONE 0.0s
+
+#3 [backend internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [backend 1/6] FROM docker.io/library/python:3.11-slim
+#4 DONE 0.0s
+
+#5 [backend internal] load build context
+#5 transferring context: 18.10kB 0.0s done
+#5 DONE 0.0s
+
+#6 [backend 2/6] RUN apt-get update &&     apt-get install -y     pkg-config     python3-dev     default-libmysqlclient-dev     build-essential
+#6 CACHED
+
+#7 [backend 3/6] WORKDIR /app
+#7 CACHED
+
+#8 [backend 4/6] COPY requirements.txt .
+#8 CACHED
+
+#9 [backend 5/6] RUN pip install --no-cache-dir -r requirements.txt
+#9 CACHED
+
+#10 [backend 6/6] COPY . .
+#10 CACHED
+
+#11 [backend] exporting to image
+#11 exporting layers done
+#11 writing image sha256:98fad809134056d0856aecebfb7f7a147763f87630cd4c9ebe68e5c3eaf45618 done
+#11 naming to docker.io/library/padel_deploy-backend done
+#11 DONE 0.0s
+
+#12 [backend] resolving provenance for metadata file
+#12 DONE 0.0s
+
+#13 [caddy internal] load build definition from Dockerfile
+#13 transferring dockerfile: 413B done
+#13 WARN: FromAsCasing: 'as' and 'FROM' keywords' casing do not match (line 3)
+#13 DONE 0.0s
+
+#14 [caddy internal] load metadata for docker.io/library/node:18-alpine
+#14 DONE 0.7s
+
+#15 [caddy internal] load metadata for docker.io/library/caddy:2.6.4-alpine
+#15 DONE 0.7s
+
+#16 [caddy internal] load .dockerignore
+#16 transferring context: 2B done
+#16 DONE 0.0s
+
+#17 [caddy build 1/6] FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
+#17 DONE 0.0s
+
+#18 [caddy stage-1 1/3] FROM docker.io/library/caddy:2.6.4-alpine@sha256:993f27cb24190f8b714f6ffd0cd487281b48b64a70d6575be8eee18b6c2b02af
+#18 CACHED
+
+#19 [caddy internal] load build context
+#19 transferring context: 8.23MB 4.0s done
+#19 DONE 4.1s
+
+#20 [caddy build 2/6] WORKDIR /app
+#20 CACHED
+
+#21 [caddy build 3/6] COPY padel-reservation-frontend/package.json ./
+#21 CACHED
+
+#22 [caddy build 4/6] RUN npm install --legacy-peer-deps
+#22 CACHED
+
+#23 [caddy build 5/6] COPY padel-reservation-frontend/. .
+#23 DONE 23.2s
+
+#24 [caddy build 6/6] RUN npm run build
+#24 0.407 
+#24 0.407 > padel-reservation-frontend@0.1.0 build
+#24 0.407 > react-scripts build
+#24 0.407 
+#24 2.229 Creating an optimized production build...
+#24 141.9 Compiled with warnings.
+#24 141.9 
+#24 141.9 [eslint] 
+#24 141.9 src/components/Home.js
+#24 141.9   Line 29:7:  Style prop value must be an object  react/style-prop-object
+#24 141.9 
+#24 141.9 Search for the keywords to learn more about each warning.
+#24 141.9 To ignore, add // eslint-disable-next-line to the line before.
+#24 141.9 
+#24 141.9 File sizes after gzip:
+#24 141.9 
+#24 142.0   220.15 kB (+3.53 kB)  build/static/js/main.f241ab08.js
+#24 142.0   65.08 kB (+876 B)     build/static/css/main.5db2f8f8.css
+#24 142.0   1.77 kB (-7 B)        build/static/js/453.bfb05eb2.chunk.js
+#24 142.0 
+#24 142.0 The project was built assuming it is hosted at /.
+#24 142.0 You can control this with the homepage field in your package.json.
+#24 142.0 
+#24 142.0 The build folder is ready to be deployed.
+#24 142.0 You may serve it with a static server:
+#24 142.0 
+#24 142.0   npm install -g serve
+#24 142.0   serve -s build
+#24 142.0 
+#24 142.0 Find out more about deployment here:
+#24 142.0 
+#24 142.0   https://cra.link/deployment
+#24 142.0 
+#24 DONE 142.4s
+
+#25 [caddy stage-1 2/3] COPY --from=build /app/build /usr/share/caddy
+#25 DONE 0.0s
+
+#26 [caddy stage-1 3/3] COPY /Caddyfile /etc/caddy/Caddyfile
+#26 DONE 0.0s
+
+#27 [caddy] exporting to image
+#27 exporting layers 0.0s done
+#27 writing image sha256:918f273bce666d7e4507f9dd824fba60756ee25822d3601134c90c7cf0262384 done
+#27 naming to docker.io/library/padel_deploy-caddy done
+#27 DONE 0.0s
+
+#28 [caddy] resolving provenance for metadata file
+#28 DONE 0.0s
+ backend  Built
+ caddy  Built
+ Network padel_deploy_default  Creating
+ Network padel_deploy_default  Created
+time="2025-07-02T16:09:14Z" level=warning msg="Found orphan containers ([padel_deploy-frontend-1]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container padel_deploy-db-1  Creating
+ Container padel_deploy-db-1  Created
+ Container padel_deploy-backend-1  Creating
+ Container padel_deploy-backend-1  Created
+ Container padel_deploy-caddy-1  Creating
+ Container padel_deploy-caddy-1  Created
+ Container padel_deploy-db-1  Starting
+ Container padel_deploy-db-1  Started
+ Container padel_deploy-backend-1  Starting
+ Container padel_deploy-backend-1  Started
+ Container padel_deploy-caddy-1  Starting
+ Container padel_deploy-caddy-1  Started

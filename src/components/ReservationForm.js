@@ -59,14 +59,17 @@ export default function ReservationForm() {
   }, []);
 
   useEffect(() => {
-    fetchCourts(selectedCommunity).then(res => {
+    const communityId = selectedCommunity?.id;
+     console.log('useEffect se ejecutó correctamente');
+    console.log('Community ID seleccionado:', communityId);
+    fetchCourts(selectedCommunity?.id).then(res => {
       setCourts(res.data);
       // Si solo hay una pista, selecciónala automáticamente
       if (res.data.length === 1) {
         setSelectedCourt(String(res.data[0].id));
       }
     });
-    fetchTimeSlots(selectedCommunity).then(res => setSlots(res.data));
+    fetchTimeSlots(selectedCommunity?.id).then(res => setSlots(res.data));
   }, [selectedCommunity]);
 
  useEffect(() => {

@@ -1,16 +1,13 @@
 # Construcción de la app
-FROM node:20-alpine as build
-
+# Etapa 1: Build de React
+FROM node:18-alpine as build
 WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm install
-
-COPY . .
+COPY padel-reservation-frontend/package.json ./
+RUN npm install --legacy-peer-deps
+COPY padel-reservation-frontend/. .
 RUN npm run build
 
-# Servir con Nginx
-FROM nginx:alpine
-COPY --from=build /app/build /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Etapa 2: Imagen final con Caddy
+FROM caddy:2.6.4-alpine
+COPY --from=build /app/build /usr/share/caddy
+COPY /Caddyfile /etc/caddy/Caddyfile 

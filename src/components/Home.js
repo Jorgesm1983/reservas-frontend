@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Tooltip } from 'flowbite-react';
 import Header from './Header';
-import { fetchMyReservations } from '../services/ApiService';
+import { API, fetchMyReservations } from '../services/ApiService';
+
 
 
 // Función para obtener iniciales
@@ -66,23 +67,18 @@ export default function Home() {
   const [invitacionActiva, setInvitacionActiva] = useState(null);
   const [isStaff, setIsStaff] = useState(false);
   const [proximosPartidos, setProximosPartidos] = useState([]);
-  const [indiceProximo, setIndiceProximo] = useState(0);  
+  const [indiceProximo, setIndiceProximo] = useState(0);
   const partidoActivo = proximosPartidos[indiceProximo];
   const [loading, setLoading] = useState(true);
-  
-  
-  
-  
+
+
+
+
 
   // 1. Carga datos del dashboard (nombre, partidos, invitaciones)
   useEffect(() => {
-    fetch('/api/dashboard/', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('access')}`
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
+    API.get('api/dashboard/').then(res =>  {
+      const data = res.data;
         setNombre(data.nombre);
         setPartidosJugadosMes(data.partidos_jugados_mes);
         setInvitacionesPendientes(
@@ -99,23 +95,31 @@ export default function Home() {
             })
           );
         setIsStaff(data.is_staff || false); // <-- Añade esta línea
-      });
+      })
+      .catch(err => {
+	console.error('Error al cargar dashboard', err);
+	});
   }, []);
+
 const [reloadProxima, setReloadProxima] = useState(0);
   // 2. Carga el próximo partido y calcula invitados aceptados
 useEffect(() => {
   async function cargarProximos() {
     setLoading(true);
-    const today = new Date().toISOString().slice(0, 10);
+ 
+   const today = new Date().toISOString().slice(0, 10);
     const ahora = new Date();
 
     // 1. Carga paralela de reservas propias e invitaciones
     const [responsePropias, respInv] = await Promise.all([
-      fetchMyReservations({ date_after: today }),
-      fetch('/api/proximos_partidos_invitado/', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('access')}` }
-      }).then(res => res.ok ? res.json() : [])
-    ]);
+  fetchMyReservations({ date_after: today }),
+  API.get('api/proximos_partidos_invitado/')
+    .then(res => res.data)
+    .catch(err => {
+      console.error('Error al cargar próximos partidos invitado:', err);
+      return [];
+    })
+]);
 
     // 2. Procesamiento de datos
     const propias = (responsePropias.data || []).map(r => ({ ...r, tipo: 'propia' }));
@@ -225,54 +229,40 @@ const urlGeo = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURICompo
 };
 
 function aceptarInvitacion(id, token) {
-  fetch(`/api/confirmar_invitacion/${token}/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('access')}`
-    },
-    body: JSON.stringify({ aceptar: true })
-  })
-    .then(res => res.json())
-    .then(data => {
-      // Opcional: muestra un mensaje de éxito
-      // Refresca las invitaciones pendientes
+  API.post(`api/confirmar_invitacion/${token}/`, { aceptar: true }).then(() => {
       recargarDashboard();
-      setReloadProxima(prev => prev + 1); // Cambia el valor para forzar recarga
+      setReloadProxima(prev => prev + 1);
       setShowModal(false);
+    })
+    .catch(err => {
+      // Manejo de error opcional
+      console.error('Error al aceptar invitación:', err);
     });
 }
 
 function rechazarInvitacion(id, token) {
-  fetch(`/api/confirmar_invitacion/${token}/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('access')}`
-    },
-    body: JSON.stringify({ aceptar: false })
-  })
-    .then(res => res.json())
-    .then(data => {
-      // Opcional: muestra un mensaje de éxito
+  API.post(`api/confirmar_invitacion/${token}/`, { aceptar: false }).then(() => {
       recargarDashboard();
-      setReloadProxima(prev => prev + 1); // Cambia el valor para forzar recarga
+      setReloadProxima(prev => prev + 1);
       setShowModal(false);
+    })
+    .catch(err => {
+      // Manejo de error opcional
+      console.error('Error al rechazar invitación:', err);
     });
 }
 
 function recargarDashboard() {
-  fetch('/api/dashboard/', {
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('access')}`
-    }
-  })
-    .then(res => res.json())
-    .then(data => {
+  API.get('api/dashboard/').then(res => {
+      const data = res.data;
       setNombre(data.nombre);
       setPartidosJugadosMes(data.partidos_jugados_mes);
       setInvitacionesPendientes(data.invitaciones_pendientes || []);
       setIsStaff(data.is_staff || false);
+    })
+    .catch(err => {
+      // Manejo de error: puedes mostrar un mensaje o redirigir al login si es 401
+      console.error('Error al recargar dashboard:', err);
     });
 }
 
@@ -283,7 +273,7 @@ if (loading) {
   return (
     <div style={{ textAlign: 'center', padding: '2rem' }}>
       <div className="spinner-border text-primary" role="status">
-        <span className="visually-hidden">Cargando...</span>
+       <span className="visually-hidden">Cargando...</span>
       </div>
     </div>
   );

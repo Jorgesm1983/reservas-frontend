@@ -52,6 +52,8 @@
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.7",
+    "ajv": "^6.12.6",
+    "ajv-keywords": "^3.5.2",
     "autoprefixer": "^10.4.21",
     "init": "^0.1.2",
     "npx": "^10.2.2",

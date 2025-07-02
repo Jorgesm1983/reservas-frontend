@@ -17,7 +17,7 @@ const LoginPage = () => {
       if (response.data.nombre) localStorage.setItem('nombre', response.data.nombre);
       if (response.data.email) localStorage.setItem('email', response.data.email);
       if (response.data.user_id) localStorage.setItem('user_id', response.data.user_id);
-      if (response.data.is_staff !== undefined) localStorage.setItem('is_staff', response.data.is_staff);
+      if (response.data.is_staff !== undefined) localStorage.setItem('is_staff', response.data.is_staff ? 'true' : 'false');
       
       navigate('/');
     } catch (err) {

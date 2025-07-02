@@ -102,7 +102,9 @@ export default function AdminUsuarios() {
     }));
   };
 
-  const handleSubmit = async e => {
+
+
+const handleSubmit = async e => {
     e.preventDefault();
     const payload = {
       nombre: form.nombre,

@@ -1,7 +1,7 @@
 // src/services/ApiService.js
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 // 2. Creamos instancia de axios configurada con la URL base
 const API = axios.create({
@@ -30,7 +30,7 @@ API.interceptors.request.use(config => {
 
 // Endpoints
 export const fetchCourts = (communityId) =>
-  communityId
+  communityId 
     ? API.get(`api/courts/?community=${communityId}`)
     : API.get('api/courts/');
 export const createCourt = (data) => API.post('api/courts/', data);
@@ -38,7 +38,7 @@ export const updateCourt = (id, data) => API.put(`api/courts/${id}/`, data);
 export const deleteCourt = (id) => API.delete(`api/courts/${id}/`);
 
 export const fetchTimeSlots = (communityId) =>
-  communityId
+  communityId 
     ? API.get(`api/timeslots/?community=${communityId}`)
     : API.get('api/timeslots/');
 export const createTimeSlot = (data) => API.post('api/timeslots/', data);
@@ -101,13 +101,13 @@ export const deleteComunidad = (id) => API.delete(`api/comunidades/${id}/`);
 // 5. Funciones convertidas de fetch a axios
 export const fetchOcupados = async ({ court, date }) => {
   const params = { court, date_after: date };
-  const response = await API.get('/api/horarios-ocupados/', { params });
+  const response = await API.get('api/horarios-ocupados/', { params });
   return response.data;
 };
 
 
 export const solicitarResetPassword = async ({ email }) => {
-  const response = await API.post('/api/password_reset/', { email });
+  const response = await API.post('api/password_reset/', { email });
   return response.data;
 };
 
@@ -125,8 +125,9 @@ export const logout = () => {
   localStorage.removeItem('access');
   localStorage.removeItem('refresh');
 
-  window.location.href = 'api//login';
+  window.location.href = 'api/login';
 };
+export const fetchDashboard = () => API.get('api/dashboard/');
 
 export { API };
 

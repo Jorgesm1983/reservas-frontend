@@ -1,7 +1,7 @@
 
-
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation} from 'react-router-dom';
 import ResponseInterceptor from "./services/ResponseInterceptor";
+import ConfirmarInvitacion from './components/ConfirmarInvitacion';
 
 // import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -95,7 +95,7 @@ function AppLayout() {
           <Route path="/invitaciones/:token/aceptar" element={<AceptarInvitacionPage />} />
           <Route path="/invitaciones/:token/rechazar" element={<RechazarInvitacionPage />} />
           <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} />
-
+          <Route path="/invitacion/:token/:accion" element={<ConfirmarInvitacion />} /> 
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
