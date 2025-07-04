@@ -5,7 +5,7 @@ WORKDIR /app
 COPY padel-reservation-frontend/package.json ./
 RUN npm install --legacy-peer-deps
 COPY padel-reservation-frontend/. .
-RUN npm run build
+RUN NODE_OPTIONS="--max-old-space-size=2048" npm run build
 
 # Etapa 2: Imagen final con Caddy
 FROM caddy:2.6.4-alpine

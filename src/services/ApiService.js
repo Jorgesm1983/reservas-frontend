@@ -22,8 +22,8 @@ API.interceptors.request.use(config => {
 
   // Token JWT
   const accessToken = localStorage.getItem('access');
-  if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
-  
+  if (accessToken) {config.headers.Authorization = `Bearer ${accessToken}`;
+  }
   return config;
 });
 

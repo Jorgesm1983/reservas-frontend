@@ -6,14 +6,23 @@ export default function ResponseInterceptor() {
   const navigate = useNavigate();
   const location = useLocation();
   const interceptorId = useRef(null);
+  const publicPaths = [
+  '/invitacion/',
+  '/invitaciones/',
+  '/registro',
+  '/recuperar-password',
+  '/reset-password-confirm',
+  '/login'
+];
 
   useEffect(() => {
     interceptorId.current = API.interceptors.response.use(
       response => response,
       error => {
+        const isPublic = publicPaths.some(path => location.pathname.startsWith(path));
         if (
           error.response?.status === 401 &&
-          location.pathname !== "/login"
+          !isPublic
         ) {
           localStorage.removeItem('access');
           localStorage.removeItem('refresh');
