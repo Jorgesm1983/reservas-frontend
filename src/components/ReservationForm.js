@@ -49,8 +49,31 @@ export default function ReservationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const successTimeout = useRef(null);
   const { selectedCommunity } = useCommunity();
-
   
+  
+const recargarDatosReserva = () => {
+  if (selectedCommunity?.id) {
+    fetchCourts(selectedCommunity.id).then(res => {
+      setCourts(res.data);
+      if (res.data.length === 1) {
+        setSelectedCourt(String(res.data[0].id));
+      }
+    });
+    fetchTimeSlots(selectedCommunity.id).then(res => setSlots(res.data));
+  }
+};
+
+
+const handleReservaSuccess = () => {
+  setSelectedCourt(''); // igual que valor inicial
+  setSelectedSlot('');  // igual que valor inicial
+  setSelectedDate(null); // igual que valor inicial
+  setDateLimits(getReservaWindow()); // igual que valor inicial
+  setOcupados([]);
+  setError('');
+ recargarDatosReserva(); // <-- recarga las opciones de los selectores
+  
+};  
 
 
   useEffect(() => {
@@ -114,10 +137,7 @@ export default function ReservationForm() {
         timeslot: parseInt(selectedSlot, 10)
       });
       setSuccessMessage('✅ Pista reservada con éxito!');
-      setSelectedCourt('');
-      setSelectedSlot('');
-      setSelectedDate(null);
-      setOcupados([]);
+      handleReservaSuccess();
     } catch (error) {
       if (error.response) {
         if (error.response.status === 409) {
@@ -134,8 +154,9 @@ export default function ReservationForm() {
       }
     } finally {
       setIsSubmitting(false);
+
     }
-  };
+  }; 
 
   useEffect(() => {
     if (successMessage) {

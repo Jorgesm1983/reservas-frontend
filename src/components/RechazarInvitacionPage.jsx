@@ -19,19 +19,19 @@ export default function RechazarInvitacionPage() {
         const msg = res.data.detail;
         setMensaje(msg);
         if (msg === "Invitación rechazada correctamente.") {
-          toast.success(msg, { toastId: 'inv-rechazada', autoClose: false, closeButton: false });
+          // toast.success(msg, { toastId: 'inv-rechazada', autoClose: false, closeButton: false });
           setEstado('rechazada');
         } else if (msg === "La invitación ya fue rechazada.") {
-          toast.info(msg, { toastId: 'inv-rechazada', autoClose: false, closeButton: false });
+          // toast.info(msg, { toastId: 'inv-rechazada', autoClose: false, closeButton: false });
           setEstado('ya-rechazada');
         } else {
-          toast.error(msg, { toastId: 'inv-rechazada', autoClose: false, closeButton: false });
+          // toast.error(msg, { toastId: 'inv-rechazada', autoClose: false, closeButton: false });
           setEstado('error');
         }
       })
       .catch(() => {
         const errMsg = 'No se pudo rechazar la invitación. Puede que ya haya sido rechazada o que el enlace no sea válido.';
-        toast.error(errMsg, { toastId: 'inv-rechazada', autoClose: false, closeButton: false });
+        // toast.error(errMsg, { toastId: 'inv-rechazada', autoClose: false, closeButton: false });
         setMensaje(errMsg);
         setEstado('error');
       });

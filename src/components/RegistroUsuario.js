@@ -7,6 +7,7 @@ function RegistroUsuario() {
     apellido: '',
     email: '',
     password: '',
+    confirmPassword: '',
     codigo_comunidad: '',
     vivienda_id: ''
   });
@@ -15,8 +16,8 @@ function RegistroUsuario() {
   const [mensaje, setMensaje] = useState('');
   const [errores, setErrores] = useState({});
   const [comunidadNombre, setComunidadNombre] = useState('');
-
-  // Elimina el useEffect inicial que cargaba todas las viviendas
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleCodigoChange = async (e) => {
     const codigo = e.target.value;
@@ -63,6 +64,18 @@ function RegistroUsuario() {
         nuevosErrores[key] = 'Este campo es requerido';
       }
     });
+    // Validación de contraseñas
+    if (formData.password.length < 8) {
+      nuevosErrores.password = 'La contraseña debe tener al menos 8 caracteres';
+    }
+    if (formData.password !== formData.confirmPassword) {
+      nuevosErrores.confirmPassword = 'Las contraseñas no coinciden';
+    }
+    // Validación de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      nuevosErrores.email = 'Formato de email no válido';
+    }
     if (Object.keys(nuevosErrores).length > 0) {
       setErrores(nuevosErrores);
       return;
@@ -80,25 +93,19 @@ function RegistroUsuario() {
     } catch (error) {
       setMensaje(error.message);
     }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData.email)) {
-          setErrores(prev => ({ ...prev, email: 'Formato de email no válido' }));
-          return;
-        }
-
   };
 
-const handleBlur = (e) => {
-  const { name, value } = e.target;
-  if (name === 'email') {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(value)) {
-      setErrores(prev => ({ ...prev, email: 'Formato de email no válido' }));
-      return;
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    if (name === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        setErrores(prev => ({ ...prev, email: 'Formato de email no válido' }));
+        return;
+      }
     }
-  }
-  setErrores(prev => ({ ...prev, [name]: '' }));
-};
+    setErrores(prev => ({ ...prev, [name]: '' }));
+  };
 
   return (
     <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-center">
@@ -173,72 +180,116 @@ const handleBlur = (e) => {
             required
           />
           {errores.email && <small className="text-danger">{errores.email}</small>}
-
         </div>
-        <div className="mb-3">
+        <div className="mb-3 position-relative">
           <input
             className="form-control form-control-lg rounded-pill border-0"
             placeholder="Contraseña"
-            type="password"
+            type={showPassword ? "text" : "password"}
             name="password"
             value={formData.password}
             onChange={handleChange}
             onBlur={handleBlur}
             required
+            minLength={8}
+            autoComplete="new-password"
           />
+          <span
+            onClick={() => setShowPassword(v => !v)}
+            style={{
+              position: "absolute",
+              right: 18,
+              top: "50%",
+              transform: "translateY(-50%)",
+              cursor: "pointer",
+              color: "#888",
+              fontSize: 20,
+              zIndex: 2,
+            }}
+            title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+          >
+            <i className={`bi bi-eye${showPassword ? "-slash" : ""}`}></i>
+          </span>
           {errores.password && <small className="text-danger">{errores.password}</small>}
         </div>
-<div className="mb-3 position-relative">
-  <input
-    className="form-control form-control-lg rounded-pill border-0"
-    placeholder="Código de comunidad"
-    name="codigo_comunidad"
-    value={formData.codigo_comunidad}
-    onChange={handleCodigoChange}
-
-    onBlur={handleBlur}
-    required
-    autoComplete="off"
-  />
-  {comunidadNombre && (
-    <span
-      className="position-absolute top-50 translate-middle-y end-0 me-3 px-3 py-1 text-dark"
-      style={{
-        fontSize: '1rem',
-    
-        borderRadius: '2rem',
-        height: '70%',
-        display: 'flex',
-        alignItems: 'center',
-        boxShadow: 'none', // elimina cualquier sombra
-        border: 'none',    // elimina cualquier borde
-        pointerEvents: 'none',
-      }}
-    >
-      {comunidadNombre}
-    </span>
-  )}
-  {errores.codigo_comunidad && <small className="text-danger">{errores.codigo_comunidad}</small>}
-</div>
-
-
-          {codigoValido && (
-            <div className="mb-3">
-              <select
-                className="form-select rounded-pill border-0"
-                name="vivienda_id"
-                value={formData.vivienda_id}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Selecciona vivienda</option>
-                {viviendas.map(v => (
-                  <option key={v.id} value={v.id}>{v.nombre}</option>
-                ))}
-              </select>
-              {errores.vivienda_id && <small className="text-danger">{errores.vivienda_id}</small>}
-            </div>
+        <div className="mb-3 position-relative">
+          <input
+            className="form-control form-control-lg rounded-pill border-0"
+            placeholder="Confirmar contraseña"
+            type={showConfirm ? "text" : "password"}
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            required
+            minLength={8}
+            autoComplete="new-password"
+          />
+          <span
+            onClick={() => setShowConfirm(v => !v)}
+            style={{
+              position: "absolute",
+              right: 18,
+              top: "50%",
+              transform: "translateY(-50%)",
+              cursor: "pointer",
+              color: "#888",
+              fontSize: 20,
+              zIndex: 2,
+            }}
+            title={showConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+          >
+            <i className={`bi bi-eye${showConfirm ? "-slash" : ""}`}></i>
+          </span>
+          {errores.confirmPassword && <small className="text-danger">{errores.confirmPassword}</small>}
+        </div>
+        <div className="mb-3 position-relative">
+          <input
+            className="form-control form-control-lg rounded-pill border-0"
+            placeholder="Código de comunidad"
+            name="codigo_comunidad"
+            value={formData.codigo_comunidad}
+            onChange={handleCodigoChange}
+            onBlur={handleBlur}
+            required
+            autoComplete="off"
+          />
+          {comunidadNombre && (
+            <span
+              className="position-absolute top-50 translate-middle-y end-0 me-3 px-3 py-1 text-dark"
+              style={{
+                fontSize: '1rem',
+                borderRadius: '2rem',
+                height: '70%',
+                display: 'flex',
+                alignItems: 'center',
+                boxShadow: 'none',
+                border: 'none',
+                pointerEvents: 'none',
+              }}
+            >
+              {comunidadNombre}
+            </span>
           )}
+          {errores.codigo_comunidad && <small className="text-danger">{errores.codigo_comunidad}</small>}
+        </div>
+        {codigoValido && (
+          <div className="mb-3">
+            <select
+              className="form-select rounded-pill border-0"
+              name="vivienda_id"
+              value={formData.vivienda_id}
+              onChange={handleChange}
+              required
+            >
+              <option value="">Selecciona vivienda</option>
+              {viviendas.map(v => (
+                <option key={v.id} value={v.id}>{v.nombre}</option>
+              ))}
+            </select>
+            {errores.vivienda_id && <small className="text-danger">{errores.vivienda_id}</small>}
+          </div>
+        )}
         {mensaje && <div className="alert alert-info">{mensaje}</div>}
         <button
           type="submit"
