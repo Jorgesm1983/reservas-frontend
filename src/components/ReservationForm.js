@@ -51,15 +51,30 @@ export default function ReservationForm() {
   const { selectedCommunity } = useCommunity();
   
   
+// const recargarDatosReserva = () => {
+//   if (selectedCommunity?.id) {
+//     fetchCourts(selectedCommunity.id).then(res => {
+//       setCourts(res.data);
+//       if (res.data.length === 1) {
+//         setSelectedCourt(String(res.data[0].id));
+//       }
+//     });
+//     fetchTimeSlots(selectedCommunity.id).then(res => setSlots(res.data));
+//   }
+// };
+
 const recargarDatosReserva = () => {
   if (selectedCommunity?.id) {
     fetchCourts(selectedCommunity.id).then(res => {
       setCourts(res.data);
       if (res.data.length === 1) {
-        setSelectedCourt(String(res.data[0].id));
+        const courtId = String(res.data[0].id);
+        setSelectedCourt(courtId);
+        fetchTimeSlots(courtId).then(res => setSlots(res.data));
+      } else {
+        setSlots([]); // Vacía los slots hasta que el usuario seleccione pista
       }
     });
-    fetchTimeSlots(selectedCommunity.id).then(res => setSlots(res.data));
   }
 };
 
@@ -81,19 +96,32 @@ const handleReservaSuccess = () => {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const communityId = selectedCommunity?.id;
-     console.log('useEffect se ejecutó correctamente');
-    console.log('Community ID seleccionado:', communityId);
-    fetchCourts(selectedCommunity?.id).then(res => {
+useEffect(() => {
+  if (selectedCommunity?.id) {
+    fetchCourts(selectedCommunity.id).then(res => {
       setCourts(res.data);
-      // Si solo hay una pista, selecciónala automáticamente
       if (res.data.length === 1) {
-        setSelectedCourt(String(res.data[0].id));
+        const courtId = String(res.data[0].id);
+        setSelectedCourt(courtId);
+        fetchTimeSlots(courtId).then(res => setSlots(res.data));
+      } else {
+        setSlots([]);
       }
     });
-    fetchTimeSlots(selectedCommunity?.id).then(res => setSlots(res.data));
-  }, [selectedCommunity]);
+  }
+}, [selectedCommunity]);
+
+useEffect(() => {
+  console.log("selectedCourt cambió:", selectedCourt);
+  if (selectedCourt) {
+    fetchTimeSlots(selectedCourt).then(res => {
+      console.log("Turnos recibidos para pista", selectedCourt, res.data);
+      setSlots(res.data);
+    });
+  } else {
+    setSlots([]);
+  }
+}, [selectedCourt]);
 
  useEffect(() => {
   const cargarOcupadosDia = async () => {

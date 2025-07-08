@@ -37,9 +37,9 @@ export const createCourt = (data) => API.post('api/courts/', data);
 export const updateCourt = (id, data) => API.put(`api/courts/${id}/`, data);
 export const deleteCourt = (id) => API.delete(`api/courts/${id}/`);
 
-export const fetchTimeSlots = (communityId) =>
-  communityId 
-    ? API.get(`api/timeslots/?community=${communityId}`)
+export const fetchTimeSlots = (courtId) =>
+  courtId 
+    ? API.get(`api/timeslots/?court=${courtId}`)
     : API.get('api/timeslots/');
 export const createTimeSlot = (data) => API.post('api/timeslots/', data);
 export const updateTimeSlot = (id, data) => API.put(`api/timeslots/${id}/`, data);
