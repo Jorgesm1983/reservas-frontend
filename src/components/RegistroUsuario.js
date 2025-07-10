@@ -81,10 +81,12 @@ function RegistroUsuario() {
       return;
     }
     try {
+      // Excluye confirmPassword del objeto a enviar
+      const { confirmPassword, ...payload } = formData;
       const response = await fetch('/api/registro_usuario', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Error en el registro');

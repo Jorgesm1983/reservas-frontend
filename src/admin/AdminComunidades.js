@@ -5,7 +5,13 @@ import Header from '../components/Header';
 export default function AdminComunidades() {
   const [comunidades, setComunidades] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: 'add', comunidad: null });
-  const [form, setForm] = useState({ name: '', direccion: '', code: '' });
+  const [form, setForm] = useState({
+    name: '',
+    direccion: '',
+    code: '',
+    reserva_hora_apertura_pasado: '08:00',
+    reserva_max_dias: 2
+  });
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
 
@@ -20,7 +26,22 @@ export default function AdminComunidades() {
 
   const handleOpenModal = (mode, comunidad = null) => {
     setModal({ open: true, mode, comunidad });
-    setForm(comunidad ? { ...comunidad } : { name: '', direccion: '', code: '' });
+    setForm(comunidad
+      ? {
+          name: comunidad.name || '',
+          direccion: comunidad.direccion || '',
+          code: comunidad.code || '',
+          reserva_hora_apertura_pasado: comunidad.reserva_hora_apertura_pasado || '08:00',
+          reserva_max_dias: comunidad.reserva_max_dias ?? 2
+        }
+      : {
+          name: '',
+          direccion: '',
+          code: '',
+          reserva_hora_apertura_pasado: '08:00',
+          reserva_max_dias: 2
+        }
+    );
     setMsg('');
   };
 
@@ -29,7 +50,10 @@ export default function AdminComunidades() {
     setMsg('');
   };
 
-  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = e => setForm(f => ({
+    ...f,
+    [e.target.name]: e.target.value
+  }));
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -42,11 +66,12 @@ export default function AdminComunidades() {
       return;
     }
     try {
+      let res;
       if (modal.mode === 'add') {
-        const res = await createComunidad(form);
+        res = await createComunidad(form);
         setComunidades([...comunidades, res.data]);
       } else {
-        const res = await updateComunidad(modal.comunidad.id, form);
+        res = await updateComunidad(modal.comunidad.id, form);
         setComunidades(comunidades.map(c => (c.id === res.data.id ? res.data : c)));
       }
       handleCloseModal();
@@ -62,7 +87,6 @@ export default function AdminComunidades() {
     }
   };
 
-  // Utilidad para copiar código al portapapeles
   const handleCopyCode = code => {
     if (!code) return;
     navigator.clipboard.writeText(code);
@@ -70,7 +94,6 @@ export default function AdminComunidades() {
     setTimeout(() => setMsg(''), 1500);
   };
 
-  // Generador simple de código aleatorio (puedes mejorarlo en backend)
   const generarCodigo = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
@@ -87,7 +110,7 @@ export default function AdminComunidades() {
         <div
           className="card shadow-sm rounded-4"
           style={{
-            maxWidth: 600,
+            maxWidth: 700,
             width: '100%',
             margin: '0 auto',
             padding: '2rem 1.5rem 1.5rem 1.5rem',
@@ -128,6 +151,8 @@ export default function AdminComunidades() {
                   <th style={{ minWidth: 140 }}>Nombre</th>
                   <th style={{ minWidth: 180 }}>Dirección</th>
                   <th style={{ minWidth: 130 }}>Código</th>
+                  <th style={{ minWidth: 120 }}>Hora apertura</th>
+                  <th style={{ minWidth: 100 }}>Días vista</th>
                   <th style={{ minWidth: 110 }}>Acciones</th>
                 </tr>
               </thead>
@@ -153,6 +178,8 @@ export default function AdminComunidades() {
                         <span className="text-muted">Sin código</span>
                       )}
                     </td>
+                    <td>{c.reserva_hora_apertura_pasado || '-'}</td>
+                    <td>{c.reserva_max_dias ?? '-'}</td>
                     <td>
                       <div className="d-flex align-items-center gap-2 flex-wrap">
                         <button
@@ -235,6 +262,26 @@ export default function AdminComunidades() {
                     <small className="text-muted">
                       El código debe ser único y difícil de adivinar. Usa el botón para generar uno seguro.
                     </small>
+                    <label className="form-label mt-3">Hora apertura reservas (último día permitido)</label>
+                    <input
+                      className="form-control mb-2"
+                      type="time"
+                      name="reserva_hora_apertura_pasado"
+                      value={form.reserva_hora_apertura_pasado}
+                      onChange={handleChange}
+                      required
+                    />
+                    <label className="form-label">Días vista (0=hoy, 1=mañana, 2=pasado mañana)</label>
+                    <input
+                      className="form-control mb-2"
+                      type="number"
+                      name="reserva_max_dias"
+                      min={0}
+                      max={31}
+                      value={form.reserva_max_dias}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
                   <div className="modal-footer">
                     <button

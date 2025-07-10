@@ -29,23 +29,10 @@ API.interceptors.request.use(config => {
 
 
 // Endpoints
-// export const fetchCourts = (communityId) =>
-//   communityId 
-//     ? API.get(`api/courts/?community=${communityId}`)
-//     : API.get('api/courts/');
-
-export const fetchCourts = (communityId) => {
-  let id = communityId;
-  if (communityId && typeof communityId === 'object') {
-    id = communityId.id;
-  }
-  if (id === undefined || id === null || id === '') {
-    // No enviar el parámetro community
-    return API.get('api/courts/');
-  }
-  return API.get(`api/courts/?community=${id}`);
-};
-
+export const fetchCourts = (communityId) =>
+  communityId 
+    ? API.get(`api/courts/?community=${communityId}`)
+    : API.get('api/courts/');
 export const createCourt = (data) => API.post('api/courts/', data);
 export const updateCourt = (id, data) => API.put(`api/courts/${id}/`, data);
 export const deleteCourt = (id) => API.delete(`api/courts/${id}/`);
@@ -80,7 +67,10 @@ export const fetchViviendas = (communityId) =>
     ? API.get(`api/viviendas/?community=${communityId}`)
     : API.get('api/viviendas/');
 export const createVivienda = (data) => API.post('api/viviendas/', data);
-export const updateVivienda = (id, data) => API.put(`api/viviendas/${id}/`, data);
+export const const setSelectedCommunity = valor => {
+    console.log('[CONTEXT] setSelectedCommunity:', valor, typeof valor);
+    _setSelectedCommunity(valor);
+  };updateVivienda = (id, data) => API.put(`api/viviendas/${id}/`, data);
 export const deleteVivienda = (id) => API.delete(`api/viviendas/${id}/`);
 
 export const fetchUsuariosComunidad = () => API.get('api/usuarios-comunidad/');

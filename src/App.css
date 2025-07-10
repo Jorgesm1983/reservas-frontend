@@ -482,13 +482,18 @@ header {
   font-weight: 600;
   font-size: 16px;
   min-width: 76px;
+  max-width: 110px;
   padding: 10px 18px;
   margin: 0 6px;
   transition: background 0.18s, color 0.18s, box-shadow 0.18s;
   box-shadow: none;
   outline: none;
-  display: inline-block;
+  display: flex;
   vertical-align: middle;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  
 }
 
 .btn-dia.selected,
@@ -803,3 +808,10 @@ input.form-control, select.form-control, input[type="email"].form-control-lg {
   font-size: 1rem; /* o el tamaño que uses en .form-control-lg */
 }
 
+.dias-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  justify-items: center;
+  margin-bottom: 8px;
+}
